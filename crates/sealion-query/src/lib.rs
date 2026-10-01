@@ -5,5 +5,7 @@
 //! reference correctness oracle (§26):
 //!
 //! - [`query`]: Boolean query AST over normalized terms.
+//! - [`execute`]: indexed Boolean execution (sorted DocId sets).
 
+pub mod execute;
 pub mod query;
