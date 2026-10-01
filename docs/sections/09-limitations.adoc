@@ -1,7 +1,7 @@
 [#limitations]
 == Known Limitations
 
-Honest status: what works, what is stubbed, and what is next.
+Honest boundaries: what the system is, and what it is not.
 This chapter overrides any optimistic reading of earlier chapters.
 
 === What is real today
@@ -13,33 +13,35 @@ verified reads.
 * Delta+varint postings compression with measured benchmarks.
 * Generations, tombstones, shadowing, `index merge` / `index delete`.
 * Exhaustive field-weighted BM25 with phrases, snippets, `--explain`.
-* CLI: `index`, `search`, `index stats|verify|merge|delete`.
+* Exact Block-Max WAND top-k verified `==` exhaustive.
+* Typo tolerance (BK-tree) and autocomplete with did-you-mean.
+* Crawler: frontier, politeness, robots, SSRF defense,
+canonicalization, SimHash dedup, HTML + img-alt extraction.
+* Relevance science: graded judgments, nDCG/MRR/MAP, regression gate
+(seed nDCG@10 = 0.9314).
+* Distribution: hash sharding, global-stats coordinator, replicas +
+failover routing, partial semantics, atomic moves.
+* Caches + benches with measured before/after.
+* HTTP API (`/api/search`, `/api/complete`, admin status/metrics)
+plus a dependency-free search page via `sealion serve`.
+* CLI: `index`, `search`, `complete`, `crawl`, `cluster/shard/node`,
+`eval`, `bench`, `serve`, `index stats|verify|merge|delete|authority`.
 
-Everything else in the tree is an honest stub that names its milestone
-(`crawl`, eval metrics, distribution, HTTP API, UI, advanced ranking).
+=== What is explicitly not here
 
-=== What is explicitly not here yet
-
-* Skipping retrieval (WAND / Block-Max WAND verified `==` exhaustive)
-* Typo tolerance and autocomplete structures
-* Crawler (frontier, politeness, robots, dedup, HTML ingestion)
-* Relevance science (graded judgments, nDCG@10 regression)
-* Distributed sharding, replicas, rebalancing
-* Caches with benchmark justification
-* HTTP API, search UI, operations dashboard
+* Hybrid vector retrieval: evaluated and explicitly deferred
+(ADR-018) — no embedding runtime, lexical only.
+* Corpus formats are `.txt` / `.md` / `.html` (alt text kept);
+binaries are counted and skipped.
+* The product UI is a dependency-free search page — that is the UI.
 
 === Limits to design around
 
-* Corpus formats today are `.txt` / `.md`; other files are counted
-and skipped.
-* Ranking is lexical BM25 only — no authority, freshness, or semantic
-signals yet.
-* Single-node, local-first: no sharding, replication, or global-IDF
-coordination in this tree.
-* Performance numbers cover codecs and small corpora; large-corpus
-QPS / p99 claims are `TBD (unmeasured)` until the benchmark corpora land.
-
-WARNING: Do not present roadmap boxes from <<architecture,Architecture>>
-as working features in external communication.
-The `README.md` status line and the milestone list in
-`docs/architecture.md` are the public truth until the code proves otherwise.
+* Ranking is lexical field-weighted BM25 (+ PageRank authority and
+freshness decay where configured) — no semantic signals.
+* A document is searchable if and only if its segment is listed in
+`manifest.json`; readers reject corruption as errors rather than
+misreading.
+* Published numbers are measured in this tree (release: 5114 docs/s
+indexing, 271 qps exact WAND search; seed nDCG@10 = 0.9314).
+Unmeasured values are `TBD (unmeasured)`.
