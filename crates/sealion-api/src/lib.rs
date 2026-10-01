@@ -1,12 +1,14 @@
 //! SeaLion HTTP API: search and admin endpoints (spec §76–77, §82).
 //!
-//! - `GET /api/search?q=...&limit=...[&explain=1]` — ranked search with
-//!   snippets, `took_ms`, and explicit `partial` (§76, §69).
+//! - `GET /api/search?q=...&limit=...[&explain=true]` — ranked search with
+//!   snippets, `took_ms`, and explicit `partial` (§76, §69). Zero-hit
+//!   simple queries may carry a `suggestion` correction (§43).
 //! - `GET /api/complete?prefix=...&limit=...` — ranked completions (§46).
 //! - `GET /api/admin/status` — index/cluster generations, counts (§77).
 //! - `GET /api/admin/metrics` — counters in JSON (§83 subset).
-//! - `GET /` — minimal search page (static HTML/JS; the React product is
-//!   future work — this proves the API contract it will consume).
+//! - `GET /`, `/search`, `/stats`, `/about` — the single-page search
+//!   frontend (static HTML/JS; the React product is future work — this
+//!   proves the API contract it will consume).
 //!
 //! Long-lived process: the query-result cache (§72) finally has reuse
 //! across requests. Admin endpoints take `Authorization: Bearer <token>`
@@ -65,6 +67,10 @@ struct SearchResponse {
     partial: bool,
     trace_ms: HashMap<String, f64>,
     results: Vec<SearchHit>,
+    /// BK-tree correction for zero-hit simple queries ("did you mean").
+    /// Absent when results exist or no confident correction was found.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    suggestion: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -212,12 +218,18 @@ async fn search_handler(
     );
 
     let took_ms = t0.elapsed().as_secs_f64() * 1000.0;
+    let suggestion = if results.is_empty() {
+        suggest_correction(&state, &params.q)
+    } else {
+        None
+    };
     Json(SearchResponse {
         query: params.q,
         took_ms,
         partial,
         trace_ms: trace,
         results,
+        suggestion,
     })
     .into_response()
 }
@@ -334,23 +346,19 @@ async fn run_cluster(
     (res.hits, res.docs, res.partial, res.per_shard_ms)
 }
 
-async fn complete_handler(
-    State(state): State<AppState>,
-    Query(params): Query<CompleteParams>,
-) -> impl IntoResponse {
-    state.counters.completes.fetch_add(1, Ordering::Relaxed);
-    use sealion_index::analysis::Analyzer;
+/// Open servable segment readers for vocabulary-level work (completion,
+/// spell suggestion). Single mode reads the data directory; cluster mode
+/// reads the first servable shard's vocabulary (representative sample;
+/// global-vocab work is documented future work). Returns readers plus
+/// the tombstone list to hide.
+fn open_readers(
+    data_dir: &std::path::Path,
+) -> (Vec<sealion_index::segment::reader::SegmentReader>, Vec<u64>) {
     use sealion_index::segment::manifest::Manifest;
     use sealion_index::segment::reader::SegmentReader;
-    use sealion_index::view::MultiSegmentView;
-    let data_dir = &state.cfg.data_dir;
-    // Cluster: complete over shard 0's vocabulary (representative sample;
-    // global-vocab completion is documented future work).
-    let (readers, tombstones) = if is_cluster(data_dir) {
+    if is_cluster(data_dir) {
         match sealion_distributed::shard::Topology::load(data_dir) {
             Ok(topo) => {
-                // First servable shard's vocabulary (representative sample;
-                // global-vocab completion is documented future work).
                 let mut all = Vec::new();
                 let servable = (0..topo.shard_count).find_map(|s| {
                     topo.healthy_copies(s)
@@ -383,7 +391,77 @@ async fn complete_handler(
             }
             Err(_) => (Vec::new(), Vec::new()),
         }
-    };
+    }
+}
+
+/// BK-tree "did you mean" for zero-hit simple term queries. Returns a
+/// corrected raw query string, or None when the query uses operators
+/// (phrases, fields, parens), every term is already in-vocabulary, or no
+/// confident (distance <= 2) correction exists. Never rewrites silently:
+/// callers present this as a suggestion the user can accept.
+fn suggest_correction(state: &AppState, raw: &str) -> Option<String> {
+    use sealion_index::analysis::Analyzer;
+    use sealion_index::view::{IndexView as _, MultiSegmentView};
+    // Operators carry their own meaning; only plain term lists qualify.
+    if raw.chars().any(|c| "\"():".contains(c)) {
+        return None;
+    }
+    let (readers, tombstones) = open_readers(&state.cfg.data_dir);
+    if readers.is_empty() {
+        return None;
+    }
+    let view = MultiSegmentView::new(&readers, &tombstones);
+    let analyzer = Analyzer::new(&state.cfg.config.analysis);
+    let mut fixes: Vec<(String, String)> = Vec::new();
+    for token in raw.split_whitespace() {
+        let upper = token.to_ascii_uppercase();
+        if matches!(upper.as_str(), "AND" | "OR" | "NOT") {
+            continue;
+        }
+        for t in analyzer.analyze(sealion_core::field::Field::Body, token) {
+            let known = sealion_core::field::Field::ALL.iter().any(|f| {
+                view.postings(*f, &t.term)
+                    .map(|p| !p.is_empty())
+                    .unwrap_or(false)
+            });
+            if known {
+                continue;
+            }
+            if let Some(s) = sealion_query::spell::suggest(&view, None, &t.term, 2, 1)
+                .into_iter()
+                .next()
+            {
+                fixes.push((t.term.clone(), s.term));
+            }
+        }
+    }
+    if fixes.is_empty() {
+        return None;
+    }
+    let out: Vec<String> = raw
+        .split_whitespace()
+        .map(|token| {
+            let terms = analyzer.analyze(sealion_core::field::Field::Body, token);
+            for t in &terms {
+                if let Some((_, fix)) = fixes.iter().find(|(bad, _)| bad == &t.term) {
+                    return fix.clone();
+                }
+            }
+            token.to_string()
+        })
+        .collect();
+    let corrected = out.join(" ");
+    (corrected != raw).then_some(corrected)
+}
+
+async fn complete_handler(
+    State(state): State<AppState>,
+    Query(params): Query<CompleteParams>,
+) -> impl IntoResponse {
+    state.counters.completes.fetch_add(1, Ordering::Relaxed);
+    use sealion_index::analysis::Analyzer;
+    use sealion_index::view::MultiSegmentView;
+    let (readers, tombstones) = open_readers(&state.cfg.data_dir);
     let view = MultiSegmentView::new(&readers, &tombstones);
     let analyzer = Analyzer::new(&state.cfg.config.analysis);
     let norm = analyzer.analyze(sealion_core::field::Field::Body, &params.prefix);
@@ -469,6 +547,11 @@ pub fn router(cfg: ServerConfig) -> axum::Router {
     };
     axum::Router::new()
         .route("/", get(root_handler))
+        // Client-side views of the single-page frontend; serving the same
+        // bundle keeps shared/deep links working without server state.
+        .route("/search", get(root_handler))
+        .route("/stats", get(root_handler))
+        .route("/about", get(root_handler))
         .route("/api/search", get(search_handler))
         .route("/api/complete", get(complete_handler))
         .route("/api/admin/status", get(status_handler))

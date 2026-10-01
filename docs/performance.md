@@ -73,7 +73,48 @@ Dictionary/posting-block/document caches (§72 list): the segment file is
 fully memory-resident after open, which *is* the block cache; no second
 structure added without a profile showing need.
 
-## 5. Known next targets (not yet profiled)
+## 5. Scale proof: 100K docs, 1/2/4/8 shards (§85/91), failure rows (§92)
+
+Corpus: `python3 evaluation/generate_scale.py /tmp/sl-100k/corp`
+(100K docs, ~30–60 words over a 500-word vocab, unique filename-stem
+titles → ~100K singleton title terms; 113 MB segment). Command:
+`sealion bench scale <corpus> --shards "1,2,4,8" --rounds 2`.
+Release profile, Apple Silicon, 9-query mix (§86 subset) × 2 rounds.
+
+| shards | index docs/s | qps | p50 | p99 | partial |
+|---|---|---|---|---|---|
+| 1 | 249 | 2 | 351 ms | 1881 ms | false |
+| 2 | 754 | 1 | 1618 ms | 2563 ms | false |
+| 4 | 1092 | 1 | 1594 ms | 2659 ms | false |
+| 8 | 1044 | 1 | 1744 ms | 2873 ms | false |
+
+Failure rows (4 shards × 2 replicas, probe query, top-20):
+
+| event | latency | partial | hits |
+|---|---|---|---|
+| baseline | 2065 ms | false | 20 |
+| 1 copy lost | 1627 ms | false, identical 20/20 | 20 (failover) |
+| shard lost (both copies) | 1359 ms | **true** | 20 (survivors) |
+| move shard 02 live | — | false, identical pre/post | 20 |
+
+Read honestly (§91: do not claim linear scaling unless measured):
+
+- **Indexing scales to 4 shards, then plateaus.** Per-shard indexes stay
+  small (sublinear BTreeMap/segment costs), so 1→4 improves 4.4×; 4→8
+  stalls on file/manifest overhead. Single-shard 100K indexing (249
+  docs/s) is far below the 2K-corpus rate (5114 docs/s) — the 100K-entry
+  dictionary dominates.
+- **Search does not speed up with shards on this mix.** The coordinator's
+  per-query union vocabulary (100K terms × shards) plus global stats
+  scans cost more than sharding saves at 100K docs / broad queries; p99
+  is driven by the fuzzy query scanning the vocabulary. Sharding pays
+  when shards exceed RAM or selective queries prune — not yet
+  demonstrated. Next: cache the union vocabulary per index generation.
+- **Failure semantics hold at scale**: single-copy loss is transparent
+  (identical hits), total shard loss is explicit partial, live moves
+  preserve results bit-for-bit.
+
+## 6. Known next targets (not yet profiled)
 
 - Persisted block-max bounds in the segment format (would remove WAND's
   per-query bound precomputation entirely).

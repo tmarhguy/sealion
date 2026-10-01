@@ -86,6 +86,23 @@ async fn search_complete_status_metrics() {
     let bad = reqwest::get(format!("{base}/api/search")).await.unwrap();
     assert_eq!(bad.status(), 400u16);
 
+    // Frontend views serve the same single-page bundle (deep links work).
+    for path in ["/", "/search?q=compiler", "/stats", "/about"] {
+        let page = reqwest::get(format!("{base}{path}")).await.unwrap();
+        assert_eq!(page.status(), 200u16);
+        let html = page.text().await.unwrap();
+        assert!(html.contains("SeaLion"), "missing brand on {path}");
+    }
+
+    // Zero-hit simple query carries a BK-tree correction, never a rewrite.
+    let res = get_json(&format!("{base}/api/search?q=compilr&limit=5")).await;
+    assert_eq!(res["results"].as_array().unwrap().len(), 0);
+    assert_eq!(res["suggestion"], "compil");
+
+    // Healthy queries carry no suggestion.
+    let res = get_json(&format!("{base}/api/search?q=compiler&limit=5")).await;
+    assert!(res.get("suggestion").is_none());
+
     handle.abort();
     let _ = std::fs::remove_dir_all(&dir);
 }
