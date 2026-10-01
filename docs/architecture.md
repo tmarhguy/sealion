@@ -6,7 +6,7 @@ milestone adds.
 
 ## Current state
 
-**Milestones 01–03 — bootstrap, analysis, in-memory search.**
+**Milestones 01–05 — bootstrap, analysis, search, segments, compression.**
 
 - 01: Rust workspace, `sealion` CLI skeleton with stubbed subcommands,
   document model (`sealion-core`), validated TOML config, CI
@@ -25,8 +25,17 @@ milestone adds.
   (`sealion-query::reference`) with index/reference agreement tests
   (unit + integration + deterministic fuzz). See
   `docs/adr/003-inmemory-index-reference.md`.
+- 04: persistent segments. Single-file `.seal` segments (header, compressed
+  blocks, sorted dictionary, stored docs, BM25 statistics, footer CRCs),
+  crash-safe temp+fsync+verify+rename publication, atomic manifest,
+  verified reader, `IndexView` unifying memory and disk, and working
+  `sealion index <corpus>` / `sealion search` / `index stats|verify`.
+  See `docs/adr/004-segments.md` and `docs/index-format.md`.
+- 05: delta+varint postings compression with raw-layout baseline and
+  measured codec/segment benchmarks (1.0–1.6 B/posting; demo segment
+  46.8% of raw). See `docs/adr/005-postings-codec.md`.
 
-Not yet: persistent segments (04), compression (05), incremental
+Not yet: incremental
 updates/merging (06), ranking (07), query parser/planner (08), WAND (09),
 typos/autocomplete (10), crawler (11), eval metrics (12), distribution
 (13–15), product (19–20). The CLI `search`/`index` subcommands stay
@@ -81,10 +90,14 @@ seeds/files → crawl frontier → fetch workers → document parser
 ## Key design decisions (ADRs)
 
 - `docs/adr/001-core-language.md` — Rust for the engine.
+- `docs/adr/002-analysis.md` — tokenizer, positions, Porter stemmer.
+- `docs/adr/003-inmemory-index-reference.md` — MemIndex and oracle.
+- `docs/adr/004-segments.md` — persistent segment format and publication.
+- `docs/adr/005-postings-codec.md` — delta+varint baseline with numbers.
 
-Future ADRs (one per important decision): segment format, postings codec,
-term dictionary, BM25 statistics distribution, top-k execution strategy,
-sharding, replication, autocomplete structure, hybrid ranking.
+Future ADRs (one per important decision): BM25 statistics distribution,
+top-k execution strategy, sharding, replication, autocomplete structure,
+hybrid ranking.
 
 ## Build order (§110–111)
 

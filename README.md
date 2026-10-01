@@ -9,12 +9,13 @@ Every inverted-index structure and retrieval algorithm is implemented here.
 
 ## Status
 
-**Under construction.** Milestones 01–03 of 20 are complete: the engine
-builds, analyzes text, and runs Boolean search over an in-memory index
-(verified against the reference oracle). Persistent segments, ranking, and
-the CLI search path are roadmap — unbuilt features are marked honestly as
-*not yet implemented*, numbers that haven't been measured are *TBD
-(unmeasured)*.
+**Under construction.** Milestones 01–05 of 20 are complete: the engine
+builds, analyzes text, runs Boolean search over in-memory and persistent
+indexes (verified against the reference oracle), publishes crash-safe
+compressed segments, and ships a working `sealion index`/`search` CLI.
+BM25 ranking, the query parser, and distribution are roadmap — unbuilt
+features are marked honestly as *not yet implemented*, numbers that
+haven't been measured are *TBD (unmeasured)*.
 
 ## Quick start (as milestones land)
 
