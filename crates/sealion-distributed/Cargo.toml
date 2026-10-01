@@ -1,0 +1,7 @@
+[package]
+name = "sealion-distributed"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sealion-core.workspace = true

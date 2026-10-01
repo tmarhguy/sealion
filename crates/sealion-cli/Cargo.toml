@@ -1,0 +1,15 @@
+[package]
+name = "sealion-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "sealion"
+path = "src/main.rs"
+
+[dependencies]
+sealion-core.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

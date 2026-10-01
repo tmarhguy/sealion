@@ -1,0 +1,7 @@
+[package]
+name = "sealion-bench"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sealion-core.workspace = true

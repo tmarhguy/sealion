@@ -1,0 +1,9 @@
+/target
+**/target
+Cargo.lock
+.env
+*.swp
+*~
+.DS_Store
+node_modules/
+dist/

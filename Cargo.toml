@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sealion-core",
+    "crates/sealion-index",
+    "crates/sealion-query",
+    "crates/sealion-crawler",
+    "crates/sealion-distributed",
+    "crates/sealion-eval",
+    "crates/sealion-api",
+    "crates/sealion-bench",
+    "crates/sealion-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "TBD"
+repository = "TBD"
+authors = ["Tyrone Marhguy"]
+
+[workspace.dependencies]
+sealion-core = { path = "crates/sealion-core" }
+sealion-index = { path = "crates/sealion-index" }
+sealion-query = { path = "crates/sealion-query" }
+sealion-crawler = { path = "crates/sealion-crawler" }
+sealion-distributed = { path = "crates/sealion-distributed" }
+sealion-eval = { path = "crates/sealion-eval" }
+sealion-api = { path = "crates/sealion-api" }
+sealion-bench = { path = "crates/sealion-bench" }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+clap = { version = "4.5", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Crawler HTTP/HTML infra (spec §2: HTTP/HTML parsing may come from libraries;
+# the IR, canonicalization, robots, frontier, scheduler, SimHash are ours).
+# reqwest: HTTP client (timeouts, redirect policy, gzip). scraper: HTML parsing
+# (we extract fields/heuristics ourselves on top of its DOM).
+reqwest = { version = "0.12", features = ["gzip", "rustls-tls"] }
+scraper = "0.24"
+url = "0.5"
+
+[profile.release]
+lto = true
+codegen-units = 1

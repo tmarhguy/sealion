@@ -1,0 +1,19 @@
+[package]
+name = "sealion-crawler"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sealion-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+# Infra libs per spec §2 (justified in docs/crawler-design.md §2 and the ADRs):
+# reqwest = HTTP client only (timeouts, redirect limits, gzip). The politeness
+# scheduler, robots parser, canonicalizer, frontier, and SimHash are ours.
+# scraper = HTML DOM parsing only; field extraction + boilerplate heuristics ours.
+reqwest.workspace = true
+scraper.workspace = true
+url.workspace = true
