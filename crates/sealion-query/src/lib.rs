@@ -6,6 +6,9 @@
 //!
 //! - [`query`]: Boolean query AST over normalized terms.
 //! - [`execute`]: indexed Boolean execution (sorted DocId sets).
+//! - [`reference`]: intentionally slow scan-based oracle; optimized search
+//!   must agree with it exactly (§41).
 
 pub mod execute;
 pub mod query;
+pub mod reference;
