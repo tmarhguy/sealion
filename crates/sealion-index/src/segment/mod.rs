@@ -18,6 +18,7 @@
 
 pub mod manifest;
 pub mod reader;
+pub mod writer;
 
 use sealion_core::error::{Error, Result};
 

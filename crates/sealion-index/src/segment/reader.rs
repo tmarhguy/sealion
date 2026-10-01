@@ -291,14 +291,15 @@ impl SegmentReader {
         if doc_ids.len() != positions.len() {
             return Err(Error::Corrupt("postings/positions length mismatch".into()));
         }
-        Ok(doc_ids
-            .into_iter()
-            .zip(positions)
-            .map(|(id, positions)| Posting {
-                doc: DocId(id),
-                positions: positions.into_iter().map(|p| p as u32).collect(),
-            })
-            .collect())
+        let mut out = Vec::with_capacity(doc_ids.len());
+        for (id, plist) in doc_ids.into_iter().zip(positions) {
+            let mut positions = Vec::with_capacity(plist.len());
+            for p in plist {
+                positions.push(u32::try_from(p).map_err(|_| Error::Corrupt("position overflows u32".into()))?);
+            }
+            out.push(Posting { doc: DocId(id), positions });
+        }
+        Ok(out)
     }
 
     /// Verify this segment against its source index: counts plus every
@@ -333,12 +334,11 @@ fn byte_to_field(b: u8) -> Result<Field> {
 }
 
 fn decode_raw_u64s(block: &[u8], what: &str) -> Result<Vec<u64>> {
-    let mut pos = 0;
     if block.len() < 8 {
         return Err(Error::Corrupt(format!("truncated raw {what} block")));
     }
     let n = u64::from_le_bytes(block[0..8].try_into().expect("8 bytes")) as usize;
-    pos = 8;
+    let mut pos = 8;
     let mut out = Vec::with_capacity(n.min(1 << 20));
     for _ in 0..n {
         if pos + 8 > block.len() {
