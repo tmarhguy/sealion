@@ -1,0 +1,5 @@
+Raft Consensus
+
+Raft consensus elects a leader that replicates log entries to followers.
+Leader election uses randomized timeouts so split votes resolve quickly
+and the cluster keeps making progress.

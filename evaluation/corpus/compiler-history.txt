@@ -1,0 +1,5 @@
+A Short History of Compilers
+
+Backus and his team shipped Fortran, the first optimizing compiler, in
+1957. Later work on parsing theory and register allocation shaped every
+modern compiler backend in use today.

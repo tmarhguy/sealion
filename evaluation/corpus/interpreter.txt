@@ -1,0 +1,5 @@
+Bytecode Interpreters
+
+A bytecode interpreter walks instruction loops with a dispatch table.
+Interpreters start faster than compilers but run slower, so many runtimes
+mix interpretation with just-in-time compilation.

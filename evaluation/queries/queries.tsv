@@ -1,0 +1,6 @@
+# SeaLion seed relevance queries (milestone 12).
+# Format: <query-id>\t<query text>
+q1	compiler optimization
+q2	distributed database consensus
+q3	baking bread
+q4	tokyo travel

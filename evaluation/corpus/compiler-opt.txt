@@ -1,0 +1,5 @@
+Compiler Optimization
+
+The compiler applies loop optimization, function inlining, and register
+allocation to produce fast machine code. Optimization passes run over
+intermediate representation before code generation.

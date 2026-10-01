@@ -1,0 +1,11 @@
+# SeaLion seed relevance judgments (milestone 12).
+# Grades: 0 = irrelevant, 1 = marginal, 2 = relevant, 3 = highly relevant.
+# Format: <query-id>\t<grade>\t<doc basename>
+q1	3	compiler-opt.txt
+q1	1	compiler-history.txt
+q1	1	interpreter.txt
+q2	3	distributed-db.txt
+q2	2	consensus.txt
+q3	3	sourdough.txt
+q4	3	tokyo.txt
+q4	0	gardening.txt

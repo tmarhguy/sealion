@@ -1,0 +1,5 @@
+Distributed Database Systems
+
+Distributed database systems replicate shards across machines for fault
+tolerance. Consensus protocols order writes so every replica converges to
+the same state even during network partitions.
