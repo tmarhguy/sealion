@@ -11,3 +11,4 @@ pub mod dictionary;
 pub mod mem_index;
 pub mod segment;
 pub mod stemmer;
+pub mod view;
