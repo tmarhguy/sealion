@@ -18,8 +18,8 @@ use sealion_core::field::Field;
 use super::manifest::Manifest;
 use super::reader::SegmentReader;
 use super::{
-    FLAG_COMPRESSED_POSITIONS, FLAG_COMPRESSED_POSTINGS, FLAGS_DEFAULT, FORMAT_VERSION,
-    HEADER_LEN, MAGIC, SEGMENT_EXT, put_u32, put_u64,
+    put_u32, put_u64, FLAGS_DEFAULT, FLAG_COMPRESSED_POSITIONS, FLAG_COMPRESSED_POSTINGS,
+    FORMAT_VERSION, HEADER_LEN, MAGIC, SEGMENT_EXT,
 };
 use crate::checksum::crc32;
 use crate::codec::encode_deltas;
@@ -49,7 +49,8 @@ pub fn write_segment(dir: &Path, index: &MemIndex, compress: bool) -> Result<Seg
     let bytes = file_bytes.len() as u64;
     {
         let mut f = File::create(&tmp).map_err(|e| Error::Io(e.to_string()))?;
-        f.write_all(&file_bytes).map_err(|e| Error::Io(e.to_string()))?;
+        f.write_all(&file_bytes)
+            .map_err(|e| Error::Io(e.to_string()))?;
         f.sync_all().map_err(|e| Error::Io(e.to_string()))?;
     }
     // Verify before publish: full reader-side validation of the temp file.

@@ -37,8 +37,8 @@ fn collect_files(root: &Path) -> Result<(Vec<RawFile>, usize)> {
     let mut skipped = 0usize;
     let mut stack = vec![root.to_path_buf()];
     while let Some(dir) = stack.pop() {
-        let entries = std::fs::read_dir(&dir)
-            .with_context(|| format!("cannot list {}", dir.display()))?;
+        let entries =
+            std::fs::read_dir(&dir).with_context(|| format!("cannot list {}", dir.display()))?;
         for entry in entries {
             let entry = entry.with_context(|| format!("cannot read entry in {}", dir.display()))?;
             let path = entry.path();
@@ -94,7 +94,11 @@ fn parse_markdown(path: &Path, text: &str) -> (String, String) {
         }
         body.push('\n');
     }
-    let fallback = path.file_stem().and_then(|s| s.to_str()).unwrap_or("untitled").to_string();
+    let fallback = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("untitled")
+        .to_string();
     (title.unwrap_or(fallback), body)
 }
 
@@ -111,7 +115,9 @@ fn to_document(raw: &RawFile) -> Result<Document> {
     metadata.insert("path".to_string(), canonical.clone());
     Ok(Document {
         id: DocId(fnv1a64(canonical.as_bytes())),
-        source: Source::File { path: canonical.clone() },
+        source: Source::File {
+            path: canonical.clone(),
+        },
         url: canonical,
         title: raw.title.clone(),
         headings: Vec::new(),
@@ -135,7 +141,12 @@ pub fn index_corpus(corpus: &Path, data_dir: &Path, analysis: &AnalysisConfig) -
         index.add_document(to_document(raw)?);
     }
     let meta = write_segment(data_dir, &index, true).map_err(|e| anyhow::anyhow!("{e}"))?;
-    println!("indexed {} documents ({} files skipped) -> {}", files.len(), skipped, meta.file_name);
+    println!(
+        "indexed {} documents ({} files skipped) -> {}",
+        files.len(),
+        skipped,
+        meta.file_name
+    );
     println!("terms: {}  segment bytes: {}", meta.term_count, meta.bytes);
     Ok(())
 }
@@ -144,7 +155,10 @@ pub fn index_corpus(corpus: &Path, data_dir: &Path, analysis: &AnalysisConfig) -
 pub fn open_segments(data_dir: &Path) -> Result<Vec<SegmentReader>> {
     let manifest = Manifest::load_or_new(data_dir).map_err(|e| anyhow::anyhow!("{e}"))?;
     if manifest.segments.is_empty() {
-        anyhow::bail!("no segments in {} (run `sealion index <corpus>` first)", data_dir.display());
+        anyhow::bail!(
+            "no segments in {} (run `sealion index <corpus>` first)",
+            data_dir.display()
+        );
     }
     let mut readers = Vec::new();
     for name in &manifest.segments {
@@ -183,7 +197,11 @@ pub fn print_stats(data_dir: &Path) -> Result<()> {
         let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
         match SegmentReader::open(&path) {
             Ok(r) => {
-                println!("  {name}: {} docs, {} terms, {size} bytes", r.len(), r.dictionary().len());
+                println!(
+                    "  {name}: {} docs, {} terms, {size} bytes",
+                    r.len(),
+                    r.dictionary().len()
+                );
                 docs += r.len();
                 terms += r.dictionary().len();
                 bytes += size;
@@ -205,7 +223,11 @@ pub fn verify(data_dir: &Path) -> Result<()> {
     for name in &manifest.segments {
         let path = data_dir.join(name);
         match SegmentReader::open(&path) {
-            Ok(r) => println!("  {name}: OK ({} docs, {} terms)", r.len(), r.dictionary().len()),
+            Ok(r) => println!(
+                "  {name}: OK ({} docs, {} terms)",
+                r.len(),
+                r.dictionary().len()
+            ),
             Err(e) => {
                 println!("  {name}: CORRUPT ({e})");
                 bad += 1;

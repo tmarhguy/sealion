@@ -46,9 +46,10 @@ pub fn search_view<V: IndexView>(view: &V, query: &Query) -> Result<Vec<DocId>> 
             }
             Ok(acc)
         }
-        Query::Not(child) => {
-            Ok(difference_sorted(&view.all_doc_ids(), &search_view(view, child)?))
-        }
+        Query::Not(child) => Ok(difference_sorted(
+            &view.all_doc_ids(),
+            &search_view(view, child)?,
+        )),
         Query::MatchAll => Ok(view.all_doc_ids()),
         Query::MatchNothing => Ok(Vec::new()),
     }

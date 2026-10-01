@@ -17,7 +17,10 @@ struct Rng(u64);
 
 impl Rng {
     fn next(&mut self) -> u64 {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         self.0 >> 33
     }
 }
@@ -36,7 +39,11 @@ fn shapes() -> Vec<(&'static str, Vec<u64>)> {
         clustered.extend(base..base + run);
         base += run + rng.next() % 50_000;
     }
-    vec![("dense-100k", dense), ("sparse-20k/5M", sparse), ("clustered", clustered)]
+    vec![
+        ("dense-100k", dense),
+        ("sparse-20k/5M", sparse),
+        ("clustered", clustered),
+    ]
 }
 
 fn raw_size(ids: &[u64]) -> usize {
@@ -62,7 +69,10 @@ fn bench_decode(ids: &[u64], buf: &[u8]) -> (f64, f64) {
 
 #[test]
 fn compression_report() {
-    println!("\n{:<16} {:>10} {:>10} {:>8} {:>12} {:>14}", "shape", "n", "raw-B", "comp-B", "B/posting", "decode");
+    println!(
+        "\n{:<16} {:>10} {:>10} {:>8} {:>12} {:>14}",
+        "shape", "n", "raw-B", "comp-B", "B/posting", "decode"
+    );
     for (name, ids) in shapes() {
         let mut buf = Vec::new();
         encode_deltas(&ids, &mut buf);

@@ -53,7 +53,9 @@ pub fn put_u64(out: &mut Vec<u8>, v: u64) {
 }
 
 pub fn get_u32(data: &[u8], pos: &mut usize) -> Result<u32> {
-    let end = pos.checked_add(4).ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
+    let end = pos
+        .checked_add(4)
+        .ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
     if end > data.len() {
         return Err(Error::Corrupt("truncated u32".into()));
     }
@@ -63,7 +65,9 @@ pub fn get_u32(data: &[u8], pos: &mut usize) -> Result<u32> {
 }
 
 pub fn get_u64(data: &[u8], pos: &mut usize) -> Result<u64> {
-    let end = pos.checked_add(8).ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
+    let end = pos
+        .checked_add(8)
+        .ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
     if end > data.len() {
         return Err(Error::Corrupt("truncated u64".into()));
     }
@@ -73,7 +77,9 @@ pub fn get_u64(data: &[u8], pos: &mut usize) -> Result<u64> {
 }
 
 pub fn get_bytes<'a>(data: &'a [u8], pos: &mut usize, len: usize) -> Result<&'a [u8]> {
-    let end = pos.checked_add(len).ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
+    let end = pos
+        .checked_add(len)
+        .ok_or_else(|| Error::Corrupt("offset overflow".into()))?;
     if end > data.len() {
         return Err(Error::Corrupt("truncated bytes".into()));
     }

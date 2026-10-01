@@ -51,7 +51,10 @@ pub fn encode_deltas(sorted: &[u64], out: &mut Vec<u8>) {
     encode_varint(sorted.len() as u64, out);
     let mut prev = 0u64;
     for (i, &v) in sorted.iter().enumerate() {
-        debug_assert!(i == 0 || v > prev, "encode_deltas requires strictly increasing input");
+        debug_assert!(
+            i == 0 || v > prev,
+            "encode_deltas requires strictly increasing input"
+        );
         if i == 0 {
             encode_varint(v, out);
         } else {
@@ -104,7 +107,10 @@ mod tests {
             (127, &[0x7F]),
             (128, &[0x80, 0x01]),
             (300, &[0xAC, 0x02]),
-            (u64::MAX, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01]),
+            (
+                u64::MAX,
+                &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01],
+            ),
         ];
         for (v, bytes) in cases {
             let mut out = Vec::new();
@@ -131,7 +137,11 @@ mod tests {
         assert_eq!(back, seq);
         assert_eq!(used, buf.len());
         // Deltas must beat raw u64s here: 6 values in far fewer than 48 bytes.
-        assert!(buf.len() < 6 * 8, "compressed larger than raw: {}", buf.len());
+        assert!(
+            buf.len() < 6 * 8,
+            "compressed larger than raw: {}",
+            buf.len()
+        );
     }
 
     #[test]

@@ -84,7 +84,9 @@ impl TermDictionary {
     /// All entries for one field with `term` as prefix, in sort order.
     /// Backs ranked autocomplete (milestone 10); ranking happens there.
     pub fn prefix_entries(&self, field: Field, prefix: &str) -> &[DictEntry] {
-        let start = self.entries.partition_point(|e| (e.field, e.term.as_str()) < (field, prefix));
+        let start = self
+            .entries
+            .partition_point(|e| (e.field, e.term.as_str()) < (field, prefix));
         let mut end = start;
         while end < self.entries.len()
             && self.entries[end].field == field
@@ -157,7 +159,11 @@ mod tests {
     #[test]
     fn prefix_enumeration_stays_in_field() {
         let d = sample();
-        let terms: Vec<&str> = d.prefix_entries(Field::Body, "data").iter().map(|e| e.term.as_str()).collect();
+        let terms: Vec<&str> = d
+            .prefix_entries(Field::Body, "data")
+            .iter()
+            .map(|e| e.term.as_str())
+            .collect();
         assert_eq!(terms, vec!["data", "database", "datagram"]);
         assert!(d.prefix_entries(Field::Title, "data").is_empty());
         assert!(d.prefix_entries(Field::Body, "zzz").is_empty());

@@ -153,15 +153,14 @@ fn main() -> Result<()> {
         }
         None => sealion_core::config::Config::default(),
     };
-    let data_dir = std::path::PathBuf::from(cli.data_dir.unwrap_or_else(|| "./sealion-data".into()));
+    let data_dir =
+        std::path::PathBuf::from(cli.data_dir.unwrap_or_else(|| "./sealion-data".into()));
     match cli.command {
         Command::Index(a) => match a.op {
             None => match a.path {
-                Some(path) => local::index_corpus(
-                    std::path::Path::new(&path),
-                    &data_dir,
-                    &cfg.analysis,
-                ),
+                Some(path) => {
+                    local::index_corpus(std::path::Path::new(&path), &data_dir, &cfg.analysis)
+                }
                 None => {
                     println!("usage: sealion index <corpus-path> | sealion index stats|verify");
                     Ok(())
@@ -185,9 +184,16 @@ fn main() -> Result<()> {
             // Resolve stored documents for display.
             let by_id: std::collections::HashMap<_, _> = readers
                 .iter()
-                .flat_map(|r| r.all_doc_ids().into_iter().filter_map(|id| r.get(id).map(|d| (id, d))))
+                .flat_map(|r| {
+                    r.all_doc_ids()
+                        .into_iter()
+                        .filter_map(|id| r.get(id).map(|d| (id, d)))
+                })
                 .collect();
-            println!("{} result(s) in {took_ms:.2}ms (partial: false, unranked boolean)", hits.len());
+            println!(
+                "{} result(s) in {took_ms:.2}ms (partial: false, unranked boolean)",
+                hits.len()
+            );
             for id in hits.iter().take(cfg.query.top_k) {
                 match by_id.get(id) {
                     Some(d) => println!("  [{}] {} -- {}", id.0, d.title, d.url),

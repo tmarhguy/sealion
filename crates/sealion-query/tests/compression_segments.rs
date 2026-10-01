@@ -20,7 +20,10 @@ struct Rng(u64);
 
 impl Rng {
     fn next(&mut self) -> u64 {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         self.0 >> 33
     }
 }
@@ -45,7 +48,9 @@ fn big_corpus(n_docs: usize) -> MemIndex {
         let body = words.join(" ");
         idx.add_document(Document {
             id: DocId(id),
-            source: Source::Synthetic { name: "bench".into() },
+            source: Source::Synthetic {
+                name: "bench".into(),
+            },
             url: format!("bench://{id}"),
             title: format!("doc {id}"),
             headings: Vec::new(),
@@ -88,8 +93,16 @@ fn segment_compression_report() {
     ];
     for q in &queries {
         let mem = search(&idx, q);
-        assert_eq!(search_view(&r_raw, q).unwrap(), mem, "raw layout diverged on {q:?}");
-        assert_eq!(search_view(&r_comp, q).unwrap(), mem, "compressed diverged on {q:?}");
+        assert_eq!(
+            search_view(&r_raw, q).unwrap(),
+            mem,
+            "raw layout diverged on {q:?}"
+        );
+        assert_eq!(
+            search_view(&r_comp, q).unwrap(),
+            mem,
+            "compressed diverged on {q:?}"
+        );
     }
 
     let postings: usize = idx.iter_postings().map(|(_, _, p)| p.len()).sum();

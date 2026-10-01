@@ -14,8 +14,8 @@ use sealion_core::error::{Error, Result};
 use sealion_core::field::Field;
 
 use super::{
-    FLAG_COMPRESSED_POSITIONS, FLAG_COMPRESSED_POSTINGS, FOOTER_LEN, FORMAT_VERSION, HEADER_LEN,
-    MAGIC, get_bytes, get_u32, get_u64,
+    get_bytes, get_u32, get_u64, FLAG_COMPRESSED_POSITIONS, FLAG_COMPRESSED_POSTINGS, FOOTER_LEN,
+    FORMAT_VERSION, HEADER_LEN, MAGIC,
 };
 use crate::checksum::crc32;
 use crate::codec::decode_deltas;
@@ -72,7 +72,9 @@ impl SegmentReader {
         }
         let version = get_u32(&data, &mut pos)?;
         if version != FORMAT_VERSION {
-            return Err(Error::Corrupt(format!("unsupported segment version {version}")));
+            return Err(Error::Corrupt(format!(
+                "unsupported segment version {version}"
+            )));
         }
         let flags = get_u32(&data, &mut pos)?;
         if flags & !(FLAG_COMPRESSED_POSTINGS | FLAG_COMPRESSED_POSITIONS) != 0 {
@@ -94,7 +96,11 @@ impl SegmentReader {
         if &data[footer_pos..footer_pos + 8] != MAGIC {
             return Err(Error::Corrupt("bad segment footer magic".into()));
         }
-        let file_crc = u32::from_le_bytes(data[footer_pos + 8..footer_pos + 12].try_into().expect("4 bytes"));
+        let file_crc = u32::from_le_bytes(
+            data[footer_pos + 8..footer_pos + 12]
+                .try_into()
+                .expect("4 bytes"),
+        );
         if crc32(&data[..footer_pos]) != file_crc {
             return Err(Error::Corrupt("file CRC mismatch".into()));
         }
@@ -153,7 +159,10 @@ impl SegmentReader {
             dict,
             docs: BTreeMap::new(),
             doc_ids: Vec::new(),
-            stats: SegmentStats { doc_count: 0, field_tokens: [0; 4] },
+            stats: SegmentStats {
+                doc_count: 0,
+                field_tokens: [0; 4],
+            },
             file_bytes: data.len(),
             data,
         };
@@ -168,7 +177,9 @@ impl SegmentReader {
     fn block(&self, offset: u64, len: u64, what: &str) -> Result<&[u8]> {
         let start = offset as usize;
         let len = len as usize;
-        let end = start.checked_add(len).ok_or_else(|| Error::Corrupt(format!("{what} offset overflow")))?;
+        let end = start
+            .checked_add(len)
+            .ok_or_else(|| Error::Corrupt(format!("{what} offset overflow")))?;
         if end > self.data.len() {
             return Err(Error::Corrupt(format!("{what} block out of bounds")));
         }
@@ -179,11 +190,17 @@ impl SegmentReader {
         for e in self.dict.entries() {
             let p = self.block(e.postings_offset, e.postings_len, "postings")?;
             if crc32(p) != e.postings_crc {
-                return Err(Error::Corrupt(format!("postings CRC mismatch for {:?}", e.key())));
+                return Err(Error::Corrupt(format!(
+                    "postings CRC mismatch for {:?}",
+                    e.key()
+                )));
             }
             let q = self.block(e.positions_offset, e.positions_len, "positions")?;
             if crc32(q) != e.positions_crc {
-                return Err(Error::Corrupt(format!("positions CRC mismatch for {:?}", e.key())));
+                return Err(Error::Corrupt(format!(
+                    "positions CRC mismatch for {:?}",
+                    e.key()
+                )));
             }
         }
         Ok(())
@@ -224,7 +241,10 @@ impl SegmentReader {
         if doc_count != self.doc_ids.len() as u64 {
             return Err(Error::Corrupt("statistics doc count mismatch".into()));
         }
-        self.stats = SegmentStats { doc_count, field_tokens };
+        self.stats = SegmentStats {
+            doc_count,
+            field_tokens,
+        };
         Ok(())
     }
 
@@ -295,9 +315,15 @@ impl SegmentReader {
         for (id, plist) in doc_ids.into_iter().zip(positions) {
             let mut positions = Vec::with_capacity(plist.len());
             for p in plist {
-                positions.push(u32::try_from(p).map_err(|_| Error::Corrupt("position overflows u32".into()))?);
+                positions.push(
+                    u32::try_from(p)
+                        .map_err(|_| Error::Corrupt("position overflows u32".into()))?,
+                );
             }
-            out.push(Posting { doc: DocId(id), positions });
+            out.push(Posting {
+                doc: DocId(id),
+                positions,
+            });
         }
         Ok(out)
     }
@@ -344,11 +370,15 @@ fn decode_raw_u64s(block: &[u8], what: &str) -> Result<Vec<u64>> {
         if pos + 8 > block.len() {
             return Err(Error::Corrupt(format!("truncated raw {what} block")));
         }
-        out.push(u64::from_le_bytes(block[pos..pos + 8].try_into().expect("8 bytes")));
+        out.push(u64::from_le_bytes(
+            block[pos..pos + 8].try_into().expect("8 bytes"),
+        ));
         pos += 8;
     }
     if pos != block.len() {
-        return Err(Error::Corrupt(format!("trailing bytes in raw {what} block")));
+        return Err(Error::Corrupt(format!(
+            "trailing bytes in raw {what} block"
+        )));
     }
     Ok(out)
 }
@@ -382,13 +412,17 @@ fn decode_raw_position_lists(block: &[u8], n: usize) -> Result<Vec<Vec<u64>>> {
             if pos + 8 > block.len() {
                 return Err(Error::Corrupt("truncated raw positions block".into()));
             }
-            list.push(u64::from_le_bytes(block[pos..pos + 8].try_into().expect("8 bytes")));
+            list.push(u64::from_le_bytes(
+                block[pos..pos + 8].try_into().expect("8 bytes"),
+            ));
             pos += 8;
         }
         out.push(list);
     }
     if pos != block.len() {
-        return Err(Error::Corrupt("trailing bytes in raw positions block".into()));
+        return Err(Error::Corrupt(
+            "trailing bytes in raw positions block".into(),
+        ));
     }
     Ok(out)
 }

@@ -26,7 +26,10 @@ pub struct Manifest {
 
 impl Manifest {
     pub fn new() -> Self {
-        Self { generation: 0, segments: Vec::new() }
+        Self {
+            generation: 0,
+            segments: Vec::new(),
+        }
     }
 
     /// Next segment id (one higher than any published so far).
@@ -62,8 +65,7 @@ impl Manifest {
 
     /// Atomically publish this generation.
     pub fn store(&self, dir: &Path) -> Result<()> {
-        let bytes =
-            serde_json::to_vec_pretty(self).map_err(|e| Error::Internal(e.to_string()))?;
+        let bytes = serde_json::to_vec_pretty(self).map_err(|e| Error::Internal(e.to_string()))?;
         let tmp = dir.join(format!("{MANIFEST_NAME}.tmp"));
         {
             let mut f = File::create(&tmp).map_err(|e| Error::Io(e.to_string()))?;
@@ -88,7 +90,8 @@ mod tests {
     use super::*;
 
     fn tmpdir(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("sealion-manifest-{name}-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("sealion-manifest-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -117,7 +120,10 @@ mod tests {
     fn corrupt_manifest_is_an_error() {
         let dir = tmpdir("corrupt");
         std::fs::write(dir.join(MANIFEST_NAME), b"{not json").unwrap();
-        assert!(matches!(Manifest::load_or_new(&dir), Err(Error::Corrupt(_))));
+        assert!(matches!(
+            Manifest::load_or_new(&dir),
+            Err(Error::Corrupt(_))
+        ));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

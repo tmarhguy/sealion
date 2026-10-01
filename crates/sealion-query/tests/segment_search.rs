@@ -17,7 +17,9 @@ use sealion_query::query::Query;
 fn doc(id: u64, title: &str, body: &str) -> Document {
     Document {
         id: DocId(id),
-        source: Source::Synthetic { name: "segsearch".into() },
+        source: Source::Synthetic {
+            name: "segsearch".into(),
+        },
         url: format!("test://{id}"),
         title: title.into(),
         headings: Vec::new(),
@@ -58,9 +60,21 @@ fn segment_search_matches_memory_on_both_layouts() {
     let config = AnalysisConfig::default();
     let analyzer = Analyzer::new(&config);
     let mut idx = MemIndex::new(config.clone());
-    idx.add_document(doc(1, "distributed systems", "distributed database systems"));
-    idx.add_document(doc(2, "compiler optimization", "compiler passes and interpreter loops"));
-    idx.add_document(doc(3, "database internals", "storage engines and query planning"));
+    idx.add_document(doc(
+        1,
+        "distributed systems",
+        "distributed database systems",
+    ));
+    idx.add_document(doc(
+        2,
+        "compiler optimization",
+        "compiler passes and interpreter loops",
+    ));
+    idx.add_document(doc(
+        3,
+        "database internals",
+        "storage engines and query planning",
+    ));
 
     for compress in [true, false] {
         let dir = tmpdir(if compress { "c" } else { "r" });

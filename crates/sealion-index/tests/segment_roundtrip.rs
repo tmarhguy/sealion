@@ -18,7 +18,9 @@ use sealion_index::segment::writer::write_segment;
 fn doc(id: u64, title: &str, body: &str) -> Document {
     Document {
         id: DocId(id),
-        source: Source::Synthetic { name: "segments".into() },
+        source: Source::Synthetic {
+            name: "segments".into(),
+        },
         url: format!("test://{id}"),
         title: title.into(),
         headings: Vec::new(),
@@ -33,10 +35,26 @@ fn doc(id: u64, title: &str, body: &str) -> Document {
 
 fn corpus() -> MemIndex {
     let mut idx = MemIndex::new(AnalysisConfig::default());
-    idx.add_document(doc(1, "distributed systems", "distributed database systems and consensus"));
-    idx.add_document(doc(2, "compiler optimization", "compiler passes and interpreter loops"));
-    idx.add_document(doc(3, "database internals", "storage engines and query planning"));
-    idx.add_document(doc(17, "network file systems", "replication and partial failure handling"));
+    idx.add_document(doc(
+        1,
+        "distributed systems",
+        "distributed database systems and consensus",
+    ));
+    idx.add_document(doc(
+        2,
+        "compiler optimization",
+        "compiler passes and interpreter loops",
+    ));
+    idx.add_document(doc(
+        3,
+        "database internals",
+        "storage engines and query planning",
+    ));
+    idx.add_document(doc(
+        17,
+        "network file systems",
+        "replication and partial failure handling",
+    ));
     idx
 }
 
@@ -48,11 +66,18 @@ fn tmpdir(name: &str) -> std::path::PathBuf {
 }
 
 fn seg_postings(r: &SegmentReader, field: Field, term: &str) -> Vec<(u64, Vec<u32>)> {
-    r.postings(field, term).unwrap().into_iter().map(|p| (p.doc.0, p.positions)).collect()
+    r.postings(field, term)
+        .unwrap()
+        .into_iter()
+        .map(|p| (p.doc.0, p.positions))
+        .collect()
 }
 
 fn mem_postings(idx: &MemIndex, field: Field, term: &str) -> Vec<(u64, Vec<u32>)> {
-    idx.postings(field, term).iter().map(|p| (p.doc.0, p.positions.clone())).collect()
+    idx.postings(field, term)
+        .iter()
+        .map(|p| (p.doc.0, p.positions.clone()))
+        .collect()
 }
 
 #[test]
@@ -79,7 +104,10 @@ fn round_trip_preserves_every_posting_list() {
         // Statistics match the source index.
         assert_eq!(reader.stats().doc_count, idx.len() as u64);
         for f in Field::ALL {
-            assert_eq!(reader.stats().field_tokens[f.index()], idx.field_token_total(f));
+            assert_eq!(
+                reader.stats().field_tokens[f.index()],
+                idx.field_token_total(f)
+            );
         }
     }
     let _ = std::fs::remove_dir_all(&dir);
@@ -91,7 +119,11 @@ fn split_segments_union_to_same_results() {
     // separately and unioning per-term postings matches the whole.
     let dir = tmpdir("split");
     let mut left = MemIndex::new(AnalysisConfig::default());
-    left.add_document(doc(1, "distributed systems", "distributed database systems"));
+    left.add_document(doc(
+        1,
+        "distributed systems",
+        "distributed database systems",
+    ));
     left.add_document(doc(2, "compiler optimization", "compiler passes"));
     let mut right = MemIndex::new(AnalysisConfig::default());
     right.add_document(doc(3, "database internals", "storage engines"));
@@ -130,7 +162,10 @@ fn single_bit_corruption_is_detected() {
         let mut bad = bytes.clone();
         bad[flip_at] ^= 0x01;
         std::fs::write(&path, &bad).unwrap();
-        assert!(SegmentReader::open(&path).is_err(), "undetected corruption at {flip_at}");
+        assert!(
+            SegmentReader::open(&path).is_err(),
+            "undetected corruption at {flip_at}"
+        );
     }
     let _ = std::fs::remove_dir_all(&dir);
 }
