@@ -6,8 +6,7 @@ how queries flow through, and where each piece lives in the tree.
 
 === System overview
 
-One index, one ranker, local-first — distribution comes later.
-Solid boxes run today; dashed boxes are roadmap.
+All boxes run — indexing, storage, search, crawl, distribution, product.
 
 .System paths at a glance
 image::system-overview.svg[System indexing and search paths,align=center,width=720]
@@ -72,23 +71,23 @@ unless documented as approximate.
 | retrieval
 
 | `sealion-crawler`
-| frontier, fetch, HTML extraction (roadmap)
+| frontier, fetch, politeness, robots, dedup, HTML extraction
 | ingestion
 
 | `sealion-eval`
-| judgments, metrics (roadmap)
+| judgments, nDCG/MRR/MAP, regression comparison
 | evaluation
 
 | `sealion-distributed`
-| sharding, coordinator, replicas (roadmap)
+| hash sharding, coordinator, replicas, routing, rebalancing
 | scale-out
 
 | `sealion-api`
-| HTTP API (roadmap)
+| HTTP search/complete/admin API + static search page
 | product
 
 | `sealion-bench`
-| benchmark harnesses (roadmap)
+| query/index benchmark harnesses
 | measurement
 
 | `sealion-cli`
@@ -96,10 +95,9 @@ unless documented as approximate.
 | interface
 |===
 
-NOTE: Crates named above exist in this tree; several currently contain
-honest stubs that name their milestone.
-The manual never presents a stub as a working subsystem —
-see <<limitations,Known Limitations>>.
+NOTE: Every crate named above runs in this tree and is covered by
+the verification gates in <<verification,Verification>> —
+see <<limitations,Known Limitations>> for honest boundaries.
 
 === Further reading
 
