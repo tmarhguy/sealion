@@ -8,7 +8,7 @@
 //! On-disk layout (all integers little-endian; see `docs/index-format.md`):
 //!
 //! ```text
-//! header (56 B): magic, version, flags, counts, region offsets, header CRC
+//! header (60 B): magic, version, flags, counts, region offsets, header CRC
 //! postings + positions data blocks (per-term, offset from dictionary)
 //! dictionary: count + sorted entries (field, term, offsets, sizes, CRCs)
 //! document metadata: stored Documents as JSON
@@ -26,8 +26,9 @@ use sealion_core::error::{Error, Result};
 pub const MAGIC: &[u8; 8] = b"SEALION1";
 /// Segment format version. Readers reject anything else.
 pub const FORMAT_VERSION: u32 = 1;
-/// Fixed header length in bytes.
-pub const HEADER_LEN: usize = 56;
+/// Fixed header length in bytes: magic(8) + version(4) + flags(4) +
+/// doc/dict counts and 3 offsets (5×8) + header CRC(4).
+pub const HEADER_LEN: usize = 60;
 /// Fixed footer length in bytes.
 pub const FOOTER_LEN: usize = 16;
 
