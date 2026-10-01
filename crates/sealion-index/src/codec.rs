@@ -51,6 +51,7 @@ pub fn encode_deltas(sorted: &[u64], out: &mut Vec<u8>) {
     encode_varint(sorted.len() as u64, out);
     let mut prev = 0u64;
     for (i, &v) in sorted.iter().enumerate() {
+        debug_assert!(i == 0 || v > prev, "encode_deltas requires strictly increasing input");
         if i == 0 {
             encode_varint(v, out);
         } else {
