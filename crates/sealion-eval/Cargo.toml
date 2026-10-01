@@ -5,3 +5,7 @@ edition.workspace = true
 
 [dependencies]
 sealion-core.workspace = true
+sealion-index.workspace = true
+sealion-query.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -43,7 +43,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # (we extract fields/heuristics ourselves on top of its DOM).
 reqwest = { version = "0.12", features = ["gzip", "rustls-tls"] }
 scraper = "0.24"
-url = "0.5"
+url = "2.5"
 
 [profile.release]
 lto = true
