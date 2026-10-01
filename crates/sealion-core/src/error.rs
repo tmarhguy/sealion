@@ -14,6 +14,8 @@ pub enum Error {
     Corrupt(String),
     #[error("invalid argument: {0}")]
     Invalid(String),
+    #[error("invalid query: {0}")]
+    InvalidQuery(String),
     #[error("not yet implemented: {0}")]
     Unimplemented(String),
     #[error("internal error: {0}")]

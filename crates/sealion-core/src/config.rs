@@ -67,6 +67,21 @@ impl Config {
             "must be in [0, 1]",
         )?;
         check(
+            "ranking.authority_weight",
+            (0.0..=10.0).contains(&self.ranking.authority_weight),
+            "must be in [0, 10]",
+        )?;
+        check(
+            "ranking.freshness_weight",
+            (0.0..=10.0).contains(&self.ranking.freshness_weight),
+            "must be in [0, 10]",
+        )?;
+        check(
+            "ranking.freshness_halflife_days",
+            (1.0..=3650.0).contains(&self.ranking.freshness_halflife_days),
+            "must be in [1, 3650] days",
+        )?;
+        check(
             "crawler.max_connections",
             self.crawler.max_connections >= 1 && self.crawler.max_connections <= 4096,
             "must be between 1 and 4096",
@@ -206,6 +221,17 @@ fn toml_parse(toml: &str) -> Result<Config, ConfigError> {
                 .unwrap_or_else(|| value.to_string());
             Ok(())
         };
+        let set_scoring = |slot: &mut ScoringKind| -> Result<(), ConfigError> {
+            let raw = value
+                .strip_prefix('"')
+                .and_then(|s| s.strip_suffix('"'))
+                .unwrap_or(value);
+            *slot = raw.parse::<ScoringKind>().map_err(|_| ConfigError {
+                key: full.clone(),
+                reason: "expected `bm25` or `tfidf`".to_string(),
+            })?;
+            Ok(())
+        };
         let set_stemmer = |slot: &mut StemmerKind| -> Result<(), ConfigError> {
             // Accept both `porter` and `"porter"` (TOML strings may be quoted).
             let raw = value
@@ -220,8 +246,12 @@ fn toml_parse(toml: &str) -> Result<Config, ConfigError> {
         };
         match full.as_str() {
             "index.segment_target_mb" => set_usize(&mut cfg.index.segment_target_mb)?,
+            "ranking.scoring" => set_scoring(&mut cfg.ranking.scoring)?,
             "ranking.bm25_k1" => set_f64(&mut cfg.ranking.bm25_k1)?,
             "ranking.bm25_b" => set_f64(&mut cfg.ranking.bm25_b)?,
+            "ranking.authority_weight" => set_f64(&mut cfg.ranking.authority_weight)?,
+            "ranking.freshness_weight" => set_f64(&mut cfg.ranking.freshness_weight)?,
+            "ranking.freshness_halflife_days" => set_f64(&mut cfg.ranking.freshness_halflife_days)?,
             "ranking.title_weight" => set_f64(&mut cfg.ranking.title_weight)?,
             "ranking.heading_weight" => set_f64(&mut cfg.ranking.heading_weight)?,
             "ranking.body_weight" => set_f64(&mut cfg.ranking.body_weight)?,
@@ -334,8 +364,33 @@ impl Default for IndexConfig {
     }
 }
 
+/// Lexical scoring function (§27): TF-IDF baseline vs BM25 primary.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ScoringKind {
+    /// `sum (1 + ln(tf)) * idf * field_weight` — the §27 baseline.
+    TfIdf,
+    /// BM25 with `k1`/`b` below — the primary ranker (§28).
+    #[default]
+    Bm25,
+}
+
+impl std::str::FromStr for ScoringKind {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "tfidf" | "tf-idf" => Ok(ScoringKind::TfIdf),
+            "bm25" => Ok(ScoringKind::Bm25),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RankingConfig {
+    /// Scoring function (§27–28).
+    pub scoring: ScoringKind,
     pub bm25_k1: f64,
     pub bm25_b: f64,
     /// Per-field BM25 multipliers (§29). Tuned later via relevance eval (§53).
@@ -343,17 +398,28 @@ pub struct RankingConfig {
     pub heading_weight: f64,
     pub body_weight: f64,
     pub anchor_weight: f64,
+    /// Link-authority blend (§55): `weight * authority(doc)` added to the
+    /// lexical score. 0.0 = off (default until eval justifies a value).
+    pub authority_weight: f64,
+    /// Freshness blend (§56): `weight * exp(-age/halflife)` added. 0.0 = off.
+    pub freshness_weight: f64,
+    /// Freshness half-life in days (§56).
+    pub freshness_halflife_days: f64,
 }
 
 impl Default for RankingConfig {
     fn default() -> Self {
         Self {
+            scoring: ScoringKind::Bm25,
             bm25_k1: 1.2,
             bm25_b: 0.75,
             title_weight: 4.0,
             heading_weight: 2.0,
             body_weight: 1.0,
             anchor_weight: 1.5,
+            authority_weight: 0.0,
+            freshness_weight: 0.0,
+            freshness_halflife_days: 30.0,
         }
     }
 }
@@ -644,5 +710,25 @@ mod tests {
         assert!(Config::from_toml("[analysis]\nmin_token_len = 0\n").is_err());
         assert!(Config::from_toml("[analysis]\nstemmer = \"snowball\"\n").is_err());
         assert!(Config::from_toml("[analysis]\nstop_words = yes\n").is_err());
+    }
+
+    #[test]
+    fn ranking_knobs_parse_and_validate() {
+        let cfg = Config::from_toml(
+            "[ranking]\nscoring = \"tfidf\"\nauthority_weight = 2.5\nfreshness_weight = 1.0\nfreshness_halflife_days = 7\n",
+        )
+        .unwrap();
+        assert_eq!(cfg.ranking.scoring, ScoringKind::TfIdf);
+        assert_eq!(cfg.ranking.authority_weight, 2.5);
+        // Defaults stay off and BM25.
+        let d = Config::default();
+        assert_eq!(d.ranking.scoring, ScoringKind::Bm25);
+        assert_eq!(d.ranking.authority_weight, 0.0);
+        assert_eq!(d.ranking.freshness_weight, 0.0);
+        // Out-of-range weights and bad scoring names fail.
+        assert!(Config::from_toml("[ranking]\nauthority_weight = 11\n").is_err());
+        assert!(Config::from_toml("[ranking]\nfreshness_weight = -1\n").is_err());
+        assert!(Config::from_toml("[ranking]\nfreshness_halflife_days = 0\n").is_err());
+        assert!(Config::from_toml("[ranking]\nscoring = \"pagerank\"\n").is_err());
     }
 }
