@@ -9,4 +9,5 @@ pub mod checksum;
 pub mod codec;
 pub mod dictionary;
 pub mod mem_index;
+pub mod segment;
 pub mod stemmer;
