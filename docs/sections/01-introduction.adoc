@@ -15,22 +15,8 @@ This manual is the engineering reference for that system.
 It records design intent, interfaces, verification strategy,
 on-disk detail, and measured behaviour in one numbered document.
 
-=== Demo
-
-.Demo — the search page answering a query with BM25-ranked hits
-image::../../media/demo/sealion-demo.gif[SeaLion demo — search page with BM25-ranked hits,align=center,width=720]
-
-The recording shows what the system is: type a query in the search
-page, get field-weighted BM25 hits with snippets back over HTTP.
-The file lives at `media/demo/sealion-demo.gif` and is also embedded
-at the top of `README.md`.
-
-++++
-<div style="text-align:center; margin: 1.5rem 0;">
-<a href="https://sealion.tmarhguy.com" style="display:inline-block;background:#1d4e89;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">Try Live Search</a>
-<a href="https://github.com/tmarhguy/sealion" style="display:inline-block;background:#24292f;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">GitHub Repository</a>
-</div>
-++++
+The fastest way to see what the system is: the demo recording and
+live links at the top of this manual.
 
 === Scope
 
