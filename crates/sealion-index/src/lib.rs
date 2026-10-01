@@ -7,5 +7,6 @@
 pub mod analysis;
 pub mod checksum;
 pub mod codec;
+pub mod dictionary;
 pub mod mem_index;
 pub mod stemmer;
