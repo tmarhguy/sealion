@@ -115,3 +115,27 @@
   #content { max-width: 100%; }
   .nav-controls { font-size: 0.9em; }
 }
+
+/* --- Print: engineering-manual hard copy. Hide navigation chrome and
+   force every collapsed section open so the printout is complete. --- */
+@media print {
+  #toc.toc2,
+  .docs-search,
+  .nav-controls,
+  #toc .nav-toggle {
+    display: none !important;
+  }
+  #toc li.nav-collapsed > ul {
+    display: block !important;
+  }
+  body.toc2 {
+    padding-left: 0 !important;
+  }
+  #content {
+    max-width: none;
+  }
+  a {
+    color: #111;
+    text-decoration: none;
+  }
+}
