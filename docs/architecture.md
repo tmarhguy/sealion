@@ -74,8 +74,7 @@ evaluated-and-deferred, ADR-018).
 Done since: product API + release (19–20: axum `/api/search` with
 per-stage trace timings + `partial`, `/api/complete`, token-gated admin
 status/metrics, long-lived query cache, static search page with live
-autocomplete, `sealion serve`, contract-tested; ADR-019. The React
-product (§78) remains future — the page consumes the same contract).
+autocomplete, `sealion serve`, contract-tested; ADR-019).
 
 **v1.0.** The §115 definition-of-done path runs end-to-end (see README).
 Signature components all present: compressed positional engine,
