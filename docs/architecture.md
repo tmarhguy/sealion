@@ -35,11 +35,52 @@ milestone adds.
   measured codec/segment benchmarks (1.0–1.6 B/posting; demo segment
   46.8% of raw). See `docs/adr/005-postings-codec.md`.
 
-Not yet: incremental
-updates/merging (06), ranking (07), query parser/planner (08), WAND (09),
-typos/autocomplete (10), crawler (11), eval metrics (12), distribution
-(13–15), product (19–20). The CLI `search`/`index` subcommands stay
-stubbed until persistent indexes land.
+Done since: incremental generations/merging (06: tombstones,
+`MultiSegmentView` shadowing, `index merge`/`index delete`, ADR-006),
+BM25 ranking (07: field-aware exhaustive top-k, phrases, snippets,
+`search --explain`, ADR-007), and query language (08: AND/OR/NOT,
+phrases, field/site filters, prefix/fuzzy, galloping intersections,
+ADR-008), and WAND top-k (09: WAND + Block-Max WAND, exact vs exhaustive
+over memory/segments/generations, `--exhaustive` flag, ADR-009).
+
+Done since: typo/autocomplete (10: BK-tree corrections, ranked
+completions, `sealion complete`, did-you-mean, ADR-010).
+
+Done since: crawler (11: frontier, politeness, robots, canonicalization,
+SimHash dedup, HTML + img-alt extraction, `sealion crawl`, `.html`
+ingestion, `docs/crawler-design.md`, ADR-011).
+
+Done since: relevance science (12: graded judgments, nDCG@10/MRR/MAP,
+`sealion eval relevance` with save/baseline regression, seed dataset at
+nDCG@10 = 0.9314, `docs/relevance-evaluation.md`, ADR-012).
+
+Done since: distribution (13: hash sharding + global-stats coordinator,
+exact vs single-index; 14: file-copy replicas, failover routing, partial
+semantics; 15: atomic-flip shard moves; `docs/distributed-design.md`,
+ADRs 013–015).
+
+Done since: performance (16: fetch-once scoring + length memos, verified
+caches, `sealion bench query/index` with WAND ablation, `docs/performance.md`,
+ADR-016).
+
+Done since: adversarial testing (17: randomized properties, garbage
+suites, per-region corruption, failure injection, soak smoke,
+`docs/correctness.md`, `docs/failure-model.md`, ADR-017).
+
+Done since: advanced ranking (18: TF-IDF/BM25 switch, PageRank authority
+via `index authority`, freshness decay, ablations measured, hybrid
+evaluated-and-deferred, ADR-018).
+
+Done since: product API + release (19–20: axum `/api/search` with
+per-stage trace timings + `partial`, `/api/complete`, token-gated admin
+status/metrics, long-lived query cache, static search page with live
+autocomplete, `sealion serve`, contract-tested; ADR-019. The React
+product (§78) remains future — the page consumes the same contract).
+
+**v1.0.** The §115 definition-of-done path runs end-to-end (see README).
+Signature components all present: compressed positional engine,
+Block-Max WAND, measured relevance, distributed serving with failure
+semantics, and a working search product.
 
 ## Local build note (macOS)
 
