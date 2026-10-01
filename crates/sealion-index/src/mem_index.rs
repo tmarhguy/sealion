@@ -169,6 +169,27 @@ impl MemIndex {
         self.postings.len()
     }
 
+    /// Iterate all stored documents in DocId order.
+    pub fn iter_docs(&self) -> impl Iterator<Item = &Document> {
+        self.docs.values()
+    }
+
+    /// Iterate `(field, term, postings)` in dictionary sort order.
+    pub fn iter_postings(&self) -> impl Iterator<Item = (Field, &str, &[Posting])> {
+        self.postings
+            .iter()
+            .map(|((f, t), p)| (*f, t.as_str(), p.as_slice()))
+    }
+
+    /// Total emitted tokens for one field across all documents (BM25 stats).
+    pub fn field_token_total(&self, field: Field) -> u64 {
+        self.field_lengths
+            .iter()
+            .filter(|((_, f), _)| *f == field)
+            .map(|(_, n)| *n as u64)
+            .sum()
+    }
+
     /// Total postings (doc-level entries) across all terms.
     pub fn posting_count(&self) -> usize {
         self.postings.values().map(Vec::len).sum()
