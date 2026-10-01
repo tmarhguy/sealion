@@ -5,8 +5,11 @@
  * Behaviour:
  * - A disclosure <button> is added to each TOC entry that has children.
  *   Title links navigate; only the button toggles collapse.
+ * - The tree starts minimized: on a first visit every collapsible entry
+ *   is collapsed so only the major chapters show (RISC-V manual style
+ *   chapter list, but collapsed instead of expanded).
  * - Collapsed hrefs persist in localStorage (gracefully ignored if
- *   storage is unavailable).
+ *   storage is unavailable); return visits restore the last state.
  * - The hierarchy containing location.hash is auto-expanded on load.
  * - A scroll-spy highlights the current section and expands its ancestors.
  * - "Collapse all" / "Expand all" controls sit under the TOC title.
@@ -18,14 +21,17 @@
   var ACTIVE_CLASS = 'toc-active';
   var COLLAPSED_CLASS = 'nav-collapsed';
 
+  // Returns null on a first visit (nothing saved yet) so the caller can
+  // apply the minimized default; otherwise the saved href list
+  // (possibly empty after "Expand all").
   function loadCollapsed() {
     try {
       var raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
+      if (raw == null) return null;
       var parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
-      return [];
+      return null;
     }
   }
 
@@ -121,8 +127,14 @@
       });
     });
 
-    /* Restore persisted state. */
-    if (collapsed.length) {
+    /* Initial state: restore saved state, or start minimized on a
+       first visit so only the major chapters show. */
+    if (collapsed === null) {
+      toc.querySelectorAll('li').forEach(function (li) {
+        if (li.querySelector(':scope > ul')) setCollapsed(li, true, null);
+      });
+      persist();
+    } else if (collapsed.length) {
       toc.querySelectorAll('li').forEach(function (li) {
         var href = tocLinkHref(li);
         if (href && collapsed.indexOf(href) !== -1) {
