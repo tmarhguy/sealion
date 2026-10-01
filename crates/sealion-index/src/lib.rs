@@ -5,5 +5,7 @@
 //! Milestone 03 adds the in-memory index.
 
 pub mod analysis;
+pub mod checksum;
+pub mod codec;
 pub mod mem_index;
 pub mod stemmer;
