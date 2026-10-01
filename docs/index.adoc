@@ -16,7 +16,24 @@
 // Each chapter lives in sections/ as NN-name.adoc with a level-1 (==) heading.
 
 [preface]
-== About this manual
+== SeaLion at a glance
+
+SeaLion is a distributed full-text search engine built from first
+principles in Rust — BM25 ranking over immutable segments, exact
+skipping, typo tolerance, a polite crawler, and a search page
+served over HTTP.
+
+.Demo — the search page answering a query
+image::sealion-demo.gif[SeaLion demo — search page with BM25-ranked hits,align=center,width=560]
+
+++++
+<div style="text-align:center; margin: 1.5rem 0;">
+<a href="https://sealion.tmarhguy.com" style="display:inline-block;background:#1d4e89;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">Try Live Search</a>
+<a href="https://github.com/tmarhguy/sealion" style="display:inline-block;background:#24292f;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">GitHub Repository</a>
+</div>
+++++
+
+=== About this manual
 
 This is the detailed technical reference for the project.
 It is the companion to the concise, GitHub-facing `README.md`:
