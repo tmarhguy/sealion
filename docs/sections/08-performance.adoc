@@ -63,7 +63,7 @@ together — size alone never justifies a codec change.
 # Codec + segment sizes (compressed must beat raw)
 cargo test -p sealion-index --test compression_bench -- --nocapture
 
-# Query + indexing harnesses (roadmap: WAND ablation, scaling runs)
+# Query + indexing harnesses (WAND ablation, cache, scaling runs)
 cargo run -p sealion-bench -- --help
 ----
 
