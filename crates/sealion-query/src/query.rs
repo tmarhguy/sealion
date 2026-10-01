@@ -9,7 +9,7 @@
 use sealion_core::field::Field;
 use sealion_index::analysis::Analyzer;
 
-/// A Boolean query over normalized terms.
+/// A Boolean query over normalized terms (plus phrases, milestone 07).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Query {
     /// A single normalized term, optionally scoped to one field.
@@ -18,6 +18,29 @@ pub enum Query {
         field: Option<Field>,
         term: String,
     },
+    /// An exact phrase over one field: terms must appear consecutively in
+    /// order (positions `p, p+1, …`). Built by [`Query::phrase_raw`].
+    /// Single-token phrases degrade to [`Query::Term`].
+    Phrase {
+        field: Field,
+        terms: Vec<String>,
+    },
+    /// Prefix match: any indexed term starting with `prefix` (normalized).
+    /// Unscoped scans all fields.
+    Prefix {
+        field: Option<Field>,
+        prefix: String,
+    },
+    /// Fuzzy match within `distance` edits (1–2). Baseline scans the
+    /// vocabulary (milestone 08); BK-tree acceleration in milestone 10.
+    Fuzzy {
+        field: Option<Field>,
+        term: String,
+        distance: u8,
+    },
+    /// URL substring filter (`site:example.com`). Evaluated against stored
+    /// documents, composable with Boolean operators.
+    Site(String),
     And(Vec<Query>),
     Or(Vec<Query>),
     Not(Box<Query>),
@@ -88,6 +111,58 @@ impl Query {
                     })
                     .collect(),
             ),
+        }
+    }
+
+    /// Build an exact-phrase query from raw text through the field's
+    /// pipeline. Term order is preserved (no dedup/sort); phrases that
+    /// analyze to 0 tokens become [`Query::MatchNothing`], 1 token degrades
+    /// to [`Query::Term`].
+    pub fn phrase_raw(analyzer: &Analyzer<'_>, field: Field, raw: &str) -> Self {
+        let mut tokens = analyzer.analyze(field, raw);
+        tokens.sort_by_key(|t| t.position);
+        let terms: Vec<String> = tokens.into_iter().map(|t| t.term).collect();
+        match terms.len() {
+            0 => Query::MatchNothing,
+            1 => Query::Term {
+                field: Some(field),
+                term: terms.into_iter().next().expect("len == 1"),
+            },
+            _ => Query::Phrase { field, terms },
+        }
+    }
+
+    /// All normalized terms in the tree (phrase terms included).
+    /// Used by ranking to score candidates. Prefix/fuzzy contribute their
+    /// literal text (ranking matches them exactly; expansion-aware scoring
+    /// arrives with WAND in milestone 09).
+    pub fn terms(&self) -> Vec<(Option<Field>, &str)> {
+        match self {
+            Query::Term { field, term } => vec![(*field, term.as_str())],
+            Query::Phrase { field, terms } => {
+                terms.iter().map(|t| (Some(*field), t.as_str())).collect()
+            }
+            Query::Prefix { field, prefix } => vec![(*field, prefix.as_str())],
+            Query::Fuzzy { field, term, .. } => vec![(*field, term.as_str())],
+            Query::Site(_) => Vec::new(),
+            Query::And(children) | Query::Or(children) => {
+                children.iter().flat_map(|q| q.terms()).collect()
+            }
+            Query::Not(child) => child.terms(),
+            Query::MatchAll | Query::MatchNothing => Vec::new(),
+        }
+    }
+
+    /// Leaf-term count for `max_query_terms` enforcement (§102).
+    pub fn leaf_count(&self) -> usize {
+        match self {
+            Query::Term { .. } | Query::Prefix { .. } | Query::Fuzzy { .. } | Query::Site(_) => 1,
+            Query::Phrase { terms, .. } => terms.len().max(1),
+            Query::And(children) | Query::Or(children) => {
+                children.iter().map(|q| q.leaf_count()).sum()
+            }
+            Query::Not(child) => child.leaf_count(),
+            Query::MatchAll | Query::MatchNothing => 0,
         }
     }
 

@@ -9,6 +9,11 @@
 //! - [`reference`]: intentionally slow scan-based oracle; optimized search
 //!   must agree with it exactly (§41).
 
+pub mod cache;
 pub mod execute;
+pub mod parser;
 pub mod query;
+pub mod rank;
 pub mod reference;
+pub mod spell;
+pub mod wand;

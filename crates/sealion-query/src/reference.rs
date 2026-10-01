@@ -35,9 +35,14 @@ pub fn reference_search(docs: &[Document], config: &AnalysisConfig, query: &Quer
         doc_terms.push((doc.id, fields));
     }
     doc_terms.sort_by_key(|(id, _)| *id);
+    let by_id: std::collections::HashMap<DocId, &Document> =
+        docs.iter().map(|d| (d.id, d)).collect();
     doc_terms
         .into_iter()
-        .filter(|(_, fields)| matches(fields, query))
+        .filter(|(id, fields)| {
+            let doc = by_id.get(id).copied();
+            matches(fields, doc, query)
+        })
         .map(|(id, _)| id)
         .collect()
 }
@@ -52,17 +57,82 @@ pub fn reference_search_index(index: &MemIndex, query: &Query) -> Vec<DocId> {
     reference_search(&docs, index.config(), query)
 }
 
-fn matches(fields: &BTreeMap<Field, BTreeSet<String>>, query: &Query) -> bool {
+fn matches(
+    fields: &BTreeMap<Field, BTreeSet<String>>,
+    doc: Option<&Document>,
+    query: &Query,
+) -> bool {
     match query {
         Query::Term { field, term } => match field {
             Some(f) => fields.get(f).is_some_and(|s| s.contains(term)),
             None => fields.values().any(|s| s.contains(term)),
         },
-        Query::And(children) => children.iter().all(|q| matches(fields, q)),
-        Query::Or(children) => children.iter().any(|q| matches(fields, q)),
-        Query::Not(child) => !matches(fields, child),
+        // Boolean oracle checks term presence only; positional phrase
+        // verification lives in `reference_phrase` via token streams.
+        Query::Phrase { field, terms } => fields
+            .get(field)
+            .is_some_and(|s| terms.iter().all(|t| s.contains(t))),
+        Query::Prefix { field, prefix } => match field {
+            Some(f) => fields
+                .get(f)
+                .is_some_and(|s| s.iter().any(|t| t.starts_with(prefix))),
+            None => fields
+                .values()
+                .any(|s| s.iter().any(|t| t.starts_with(prefix))),
+        },
+        Query::Fuzzy {
+            field,
+            term,
+            distance,
+        } => {
+            let hits = |s: &BTreeSet<String>| {
+                s.iter()
+                    .any(|t| crate::execute::edit_distance_capped(term, t, *distance) <= *distance)
+            };
+            match field {
+                Some(f) => fields.get(f).is_some_and(hits),
+                None => fields.values().any(hits),
+            }
+        }
+        Query::Site(host) => {
+            doc.is_some_and(|d| d.url.to_lowercase().contains(&host.to_lowercase()))
+        }
+        Query::And(children) => children.iter().all(|q| matches(fields, doc, q)),
+        Query::Or(children) => children.iter().any(|q| matches(fields, doc, q)),
+        Query::Not(child) => !matches(fields, doc, child),
         Query::MatchAll => true,
         Query::MatchNothing => false,
+    }
+}
+
+/// Positional phrase oracle: re-analyzed token streams must contain the
+/// terms consecutively in order. Used by phrase agreement tests.
+pub fn reference_phrase(
+    docs: &[Document],
+    config: &AnalysisConfig,
+    field: Field,
+    terms: &[String],
+) -> Vec<DocId> {
+    let analyzer = Analyzer::new(config);
+    let mut out = Vec::new();
+    let mut sorted: Vec<&Document> = docs.iter().collect();
+    sorted.sort_by_key(|d| d.id);
+    for doc in sorted {
+        let stream = analyzer.analyze(field, &field_text(doc, field));
+        let seq: Vec<&str> = stream.iter().map(|t| t.term.as_str()).collect();
+        if seq.windows(terms.len()).any(|w| w == terms) {
+            out.push(doc.id);
+        }
+    }
+    out
+}
+
+fn field_text(doc: &Document, field: Field) -> String {
+    match field {
+        Field::Title => doc.title.clone(),
+        Field::Heading => doc.headings.join("\n"),
+        Field::Body => doc.body.clone(),
+        Field::Anchor => doc.anchor_text.join("\n"),
     }
 }
 
