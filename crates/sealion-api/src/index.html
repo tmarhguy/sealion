@@ -5,50 +5,405 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SeaLion Search</title>
 <style>
-body { font-family: system-ui, sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1rem; }
-h1 { letter-spacing: .1em; }
-#q { width: 70%; padding: .5rem; font-size: 1rem; }
-button { padding: .5rem 1rem; font-size: 1rem; }
-.result { margin: 1.2rem 0; }
-.result .title { font-size: 1.1rem; }
-.result .url { color: #555; font-size: .85rem; }
-.result .snip { margin-top: .2rem; }
-mark { background: #fff3b0; }
-#meta { color: #555; font-size: .85rem; }
-#ac { border: 1px solid #ccc; max-width: 70%; }
-#ac div { padding: .25rem .5rem; cursor: pointer; }
-#ac div:hover { background: #eee; }
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5b5b5b;
+    --line: #d9d9d9;
+    --accent: #1d4e89;
+    --accent-soft: #e8eef6;
+    --warn-bg: #fdf3e3;
+    --warn-ink: #8a5a00;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 1rem 4rem;
+    line-height: 1.5;
+  }
+  header.brand { text-align: center; margin-bottom: 1.5rem; }
+  header.brand h1 {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: .35em;
+    text-indent: .35em;
+    font-weight: 700;
+  }
+  header.brand p { margin: .35rem 0 0; color: var(--muted); font-size: .95rem; }
+  form.search { display: flex; gap: .5rem; }
+  .box { position: relative; flex: 1; }
+  #q {
+    width: 100%;
+    padding: .65rem 2.2rem .65rem .8rem;
+    font-size: 1.05rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  #q:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  #clear {
+    position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+    border: none; background: none; color: var(--muted);
+    font-size: 1.1rem; cursor: pointer; padding: .2rem .4rem; border-radius: 4px;
+  }
+  #clear:hover { color: var(--ink); background: #f0f0f0; }
+  button.go {
+    padding: .65rem 1.4rem; font-size: 1.05rem; cursor: pointer;
+    background: var(--accent); color: #fff;
+    border: 1px solid var(--accent); border-radius: var(--radius);
+  }
+  button.go:hover { filter: brightness(1.08); }
+  button.go:disabled { opacity: .6; cursor: wait; }
+  button.go:focus-visible, #clear:focus-visible, .chip:focus-visible,
+  #ac li:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  #ac {
+    list-style: none; margin: .25rem 0 0; padding: 0;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: #fff; position: absolute; z-index: 10; left: 0; right: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  }
+  #ac[hidden] { display: none; }
+  #ac li { padding: .45rem .8rem; cursor: pointer; display: flex; gap: .5rem; align-items: baseline; }
+  #ac li[aria-selected="true"], #ac li:hover { background: var(--accent-soft); }
+  #ac small { color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .tray {
+    display: flex; flex-wrap: wrap; gap: .4rem .8rem; align-items: center;
+    margin-top: .8rem; font-size: .85rem; color: var(--muted);
+  }
+  .chip {
+    border: 1px solid var(--line); background: #fafafa; border-radius: 999px;
+    padding: .15rem .7rem; font-size: .82rem; cursor: pointer; color: var(--ink);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .tray select { font-size: .85rem; padding: .15rem .3rem; }
+  .tray label { display: inline-flex; gap: .3rem; align-items: center; cursor: pointer; }
+  details.syntax { font-size: .82rem; }
+  details.syntax table { border-collapse: collapse; margin-top: .3rem; }
+  details.syntax td, details.syntax th { border: 1px solid var(--line); padding: .15rem .5rem; text-align: left; }
+  #meta { color: var(--muted); font-size: .88rem; min-height: 1.4em; margin: 1.1rem 0 .4rem; }
+  #meta .partial {
+    background: var(--warn-bg); color: var(--warn-ink);
+    border: 1px solid #e8cf9a; border-radius: 4px;
+    padding: 0 .4rem; font-weight: 600;
+  }
+  #meta .trace { font-size: .78rem; }
+  #error[hidden] { display: none; }
+  #error {
+    border: 1px solid #d99; background: #fdf0f0; color: #7a1f1f;
+    border-radius: var(--radius); padding: .6rem .8rem; margin: .6rem 0;
+  }
+  ol#results { list-style: none; margin: 0; padding: 0; counter-reset: rank; }
+  ol#results > li {
+    counter-increment: rank;
+    border-top: 1px solid var(--line);
+    padding: .9rem 0 .9rem 2.6rem;
+    position: relative;
+  }
+  ol#results > li::before {
+    content: counter(rank);
+    position: absolute; left: 0; top: .95rem;
+    width: 1.9rem; text-align: right;
+    color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .result .title { font-size: 1.08rem; font-weight: 600; }
+  .result .score {
+    font-size: .75rem; font-weight: 600; color: var(--accent);
+    background: var(--accent-soft); border-radius: 4px;
+    padding: .05rem .4rem; margin-left: .5rem; white-space: nowrap;
+  }
+  .result .url { color: var(--muted); font-size: .83rem; word-break: break-all; }
+  .result .snip { margin-top: .3rem; white-space: pre-wrap; }
+  mark { background: #fff3b0; border-radius: 2px; padding: 0 .1em; }
+  details.why { margin-top: .4rem; font-size: .83rem; }
+  details.why summary { cursor: pointer; color: var(--accent); }
+  details.why pre {
+    background: #f7f7f7; border: 1px solid var(--line);
+    border-radius: 6px; padding: .5rem .7rem; overflow-x: auto;
+  }
+  .empty { color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); padding: 1rem; }
+  footer { margin-top: 2.5rem; text-align: center; color: var(--muted); font-size: .8rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
 </head>
 <body>
-<h1>SEALION</h1>
-<input id="q" type="text" placeholder="Search the corpus..." autocomplete="off">
-<button onclick="search()">Search</button>
-<div id="ac"></div>
-<p id="meta"></p>
-<div id="results"></div>
+<header class="brand">
+  <h1>SEALION</h1>
+  <p>Full-text search over the local corpus.</p>
+</header>
+
+<form class="search" id="form" role="search" autocomplete="off">
+  <div class="box">
+    <label class="sr" for="q">Search the corpus</label>
+    <input id="q" type="text" placeholder="Search the corpus&hellip;" autocomplete="off"
+           role="combobox" aria-expanded="false" aria-controls="ac" aria-autocomplete="list">
+    <button id="clear" type="button" aria-label="Clear query" hidden>&times;</button>
+    <ul id="ac" role="listbox" aria-label="Suggestions" hidden></ul>
+  </div>
+  <button class="go" id="go" type="submit">Search</button>
+</form>
+
+<div class="tray">
+  <span>Try:</span>
+  <button class="chip" type="button" data-q="distributed systems">distributed systems</button>
+  <button class="chip" type="button" data-q="compiler">compiler</button>
+  <button class="chip" type="button" data-q="consensus">consensus</button>
+  <button class="chip" type="button" data-q="title:compiler">title:compiler</button>
+  <label>Results
+    <select id="limit" aria-label="Results per page">
+      <option>5</option><option>10</option><option selected>20</option><option>50</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="explain"> Explain ranking</label>
+  <details class="syntax">
+    <summary>Query syntax</summary>
+    <table>
+      <tr><th>Form</th><th>Example</th></tr>
+      <tr><td>words (AND)</td><td><code>distributed systems</code></td></tr>
+      <tr><td>AND / OR / NOT</td><td><code>compiler NOT javascript</code></td></tr>
+      <tr><td>phrase</td><td><code>"distributed systems"</code></td></tr>
+      <tr><td>field</td><td><code>title:compiler</code></td></tr>
+      <tr><td>prefix / fuzzy</td><td><code>comp*</code> · <code>compiler~1</code></td></tr>
+    </table>
+  </details>
+</div>
+
+<div id="error" role="alert" hidden></div>
+<p id="meta" aria-live="polite"></p>
+<ol id="results" aria-live="polite"></ol>
+
+<footer id="foot">SeaLion &middot; built by Tyrone Marhguy</footer>
+
 <script>
+'use strict';
 const q = document.getElementById('q');
+const go = document.getElementById('go');
+const clearBtn = document.getElementById('clear');
 const ac = document.getElementById('ac');
-q.addEventListener('input', async () => {
-  if (q.value.length < 2) { ac.innerHTML = ''; return; }
-  const r = await fetch('/api/complete?prefix=' + encodeURIComponent(q.value) + '&limit=6');
-  const j = await r.json();
-  ac.innerHTML = (j.completions || []).map(c =>
-    `<div onclick="pick('${c.term.replace(/'/g, "\\'")}')">${c.term} <small>(${c.df})</small></div>`).join('');
-});
-function pick(t) { q.value = t; ac.innerHTML = ''; search(); }
-q.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
-async function search() {
-  const r = await fetch('/api/search?q=' + encodeURIComponent(q.value) + '&limit=20');
-  const j = await r.json();
-  document.getElementById('meta').textContent =
-    `${j.results.length} result(s) in ${j.took_ms.toFixed(2)}ms${j.partial ? ' (PARTIAL)' : ''}`;
-  document.getElementById('results').innerHTML = j.results.map(h =>
-    `<div class="result"><div class="title">${esc(h.title)} <small>${h.score.toFixed(2)}</small></div>` +
-    `<div class="url">${esc(h.url)}</div><div class="snip">${h.snippet}</div></div>`).join('');
+const meta = document.getElementById('meta');
+const results = document.getElementById('results');
+const errorBox = document.getElementById('error');
+const limitSel = document.getElementById('limit');
+const explainBox = document.getElementById('explain');
+let acItems = [], acActive = -1, acTimer = 0, searchSeq = 0;
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.hidden = !msg;
+}
+function setLoading(on) {
+  go.disabled = on;
+  go.textContent = on ? '\u2026' : 'Search';
+}
+
+/* ---------- autocomplete ---------- */
+function hideAc() {
+  ac.hidden = true;
+  ac.innerHTML = '';
+  acItems = [];
+  acActive = -1;
+  q.setAttribute('aria-expanded', 'false');
+}
+function renderAc(items) {
+  ac.innerHTML = '';
+  acItems = items;
+  acActive = -1;
+  if (!items.length) { hideAc(); return; }
+  items.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.id = 'ac-' + i;
+    li.setAttribute('role', 'option');
+    li.setAttribute('aria-selected', 'false');
+    const term = document.createElement('span');
+    term.textContent = c.term;
+    const info = document.createElement('small');
+    info.textContent = c.field + ' · df ' + c.df;
+    li.append(term, info);
+    li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+    ac.appendChild(li);
+  });
+  ac.hidden = false;
+  q.setAttribute('aria-expanded', 'true');
+}
+function markAc() {
+  [...ac.children].forEach((li, i) => {
+    const on = i === acActive;
+    li.setAttribute('aria-selected', on ? 'true' : 'false');
+    li.id = 'ac-' + i;
+  });
+  q.setAttribute('aria-activedescendant', acActive >= 0 ? 'ac-' + acActive : '');
+  const cur = ac.children[acActive];
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+function pick(i) {
+  if (i < 0 || i >= acItems.length) return;
+  q.value = acItems[i].term;
+  hideAc();
+  syncClear();
+  search();
+}
+q.addEventListener('input', () => {
+  syncClear();
+  clearTimeout(acTimer);
+  if (q.value.trim().length < 2) { hideAc(); return; }
+  acTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/api/complete?prefix=' + encodeURIComponent(q.value.trim()) + '&limit=6');
+      if (!r.ok) return;
+      const j = await r.json();
+      if (document.activeElement === q) renderAc(j.completions || []);
+    } catch (e) { /* suggestions are best-effort; search still works */ }
+  }, 150);
+});
+q.addEventListener('keydown', e => {
+  if (ac.hidden) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    acActive = e.key === 'ArrowDown'
+      ? Math.min(acActive + 1, acItems.length - 1)
+      : Math.max(acActive - 1, 0);
+    markAc();
+  } else if (e.key === 'Enter' && acActive >= 0) {
+    e.preventDefault();
+    pick(acActive);
+  } else if (e.key === 'Escape') {
+    hideAc();
+  }
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.box')) hideAc();
+});
+
+/* ---------- query box ---------- */
+function syncClear() { clearBtn.hidden = q.value.length === 0; }
+clearBtn.addEventListener('click', () => {
+  q.value = '';
+  syncClear();
+  hideAc();
+  q.focus();
+});
+document.querySelectorAll('.chip').forEach(c =>
+  c.addEventListener('click', () => {
+    q.value = c.dataset.q;
+    syncClear();
+    hideAc();
+    search();
+  }));
+document.getElementById('form').addEventListener('submit', e => {
+  e.preventDefault();
+  hideAc();
+  search();
+});
+explainBox.addEventListener('change', () => { if (q.value.trim()) search(); });
+limitSel.addEventListener('change', () => { if (q.value.trim()) search(); });
+
+/* ---------- search ---------- */
+async function search() {
+  const query = q.value.trim();
+  showError('');
+  if (!query) {
+    meta.textContent = 'Type a query above — or pick one of the examples.';
+    results.innerHTML = '';
+    return;
+  }
+  const mySeq = ++searchSeq;
+  setLoading(true);
+  const url = '/api/search?q=' + encodeURIComponent(query) +
+    '&limit=' + encodeURIComponent(limitSel.value) +
+    (explainBox.checked ? '&explain=true' : '');
+  let j;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    j = await r.json();
+  } catch (e) {
+    if (mySeq !== searchSeq) return;
+    setLoading(false);
+    showError('Search failed (' + e.message + '). Is the server still running?');
+    return;
+  }
+  if (mySeq !== searchSeq) return; // stale response
+  setLoading(false);
+  render(j);
+}
+
+function render(j) {
+  results.innerHTML = '';
+  const n = j.results.length;
+  meta.innerHTML = '';
+  const count = document.createElement('strong');
+  count.textContent = n + ' result' + (n === 1 ? '' : 's');
+  meta.append(count, ' in ' + j.took_ms.toFixed(2) + 'ms');
+  if (j.partial) {
+    const b = document.createElement('span');
+    b.className = 'partial';
+    b.textContent = 'PARTIAL';
+    b.title = 'Some shards were unavailable; results may be incomplete.';
+    meta.append(' ', b);
+  }
+  const t = j.trace_ms || {};
+  if (t.parse_ms != null) {
+    const tr = document.createElement('div');
+    tr.className = 'trace';
+    tr.textContent = 'parse ' + t.parse_ms.toFixed(2) + 'ms · search ' +
+      (t.search_ms || 0).toFixed(2) + 'ms · snippets ' + (t.snippets_ms || 0).toFixed(2) + 'ms';
+    meta.appendChild(tr);
+  }
+  if (!n) {
+    const d = document.createElement('div');
+    d.className = 'empty';
+    d.textContent = 'No results for \u201C' + j.query + '\u201D. Try fewer terms, a prefix like comp*, or fuzzy term~1.';
+    results.appendChild(d);
+    return;
+  }
+  j.results.forEach(h => {
+    const li = document.createElement('li');
+    li.className = 'result';
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = h.title;
+    const score = document.createElement('span');
+    score.className = 'score';
+    score.title = 'BM25 score (higher is better)';
+    score.textContent = h.score.toFixed(2);
+    title.appendChild(score);
+    const url = document.createElement('div');
+    url.className = 'url';
+    url.textContent = h.url;
+    const snip = document.createElement('div');
+    snip.className = 'snip';
+    snip.innerHTML = h.snippet; // server-generated markup (<mark> highlights)
+    li.append(title, url, snip);
+    if (h.explain) {
+      const det = document.createElement('details');
+      det.className = 'why';
+      const sum = document.createElement('summary');
+      sum.textContent = 'Why ranked here?';
+      const pre = document.createElement('pre');
+      pre.textContent = h.explain;
+      det.append(sum, pre);
+      li.appendChild(det);
+    }
+    results.appendChild(li);
+  });
+}
+
+/* ---------- footer: live index stats ---------- */
+fetch('/api/admin/status').then(r => r.json()).then(s => {
+  const foot = document.getElementById('foot');
+  const d = (s && s.detail) || {};
+  const extra = document.createElement('span');
+  extra.textContent = ' · ' + (s.mode || 'single') + ' node · generation ' +
+    (d.generation != null ? d.generation : '?') + ' · ' +
+    (d.segments != null ? d.segments : '?') + ' segment(s)';
+  foot.appendChild(extra);
+}).catch(() => {});
 </script>
 </body>
 </html>
