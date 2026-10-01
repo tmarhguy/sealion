@@ -112,6 +112,9 @@ impl MemIndex {
         }
         let analyzer = Analyzer::new(&self.config);
         let analyzed = analyzer.analyze_document(&doc);
+        // Only touched lists need the sorted-order fix-up (milestone 16:
+        // the old loop re-scanned every list per document, O(D×T)).
+        let mut touched: Vec<(Field, String)> = Vec::new();
         for (field, tokens) in &analyzed {
             self.field_lengths.insert((id, *field), tokens.len());
             // Group positions per term, preserving sorted order (positions
@@ -125,16 +128,19 @@ impl MemIndex {
                     .entry((*field, term.to_string()))
                     .or_default()
                     .push(Posting { doc: id, positions });
+                touched.push((*field, term.to_string()));
             }
         }
         // Posting lists stay sorted: DocIds are pushed in insertion order,
-        // which may not be sorted if callers insert out of order, so fix up
-        // the touched lists. (Bulk ingestion in doc order pays nothing here.)
-        for list in self.postings.values_mut() {
-            if list.len() >= 2 {
-                let last = list.len() - 1;
-                if list[last - 1].doc > list[last].doc {
-                    list.sort_by_key(|p| p.doc);
+        // which may not be sorted if callers insert out of order.
+        // (Bulk ingestion in doc order pays nothing here.)
+        for key in touched {
+            if let Some(list) = self.postings.get_mut(&key) {
+                if list.len() >= 2 {
+                    let last = list.len() - 1;
+                    if list[last - 1].doc > list[last].doc {
+                        list.sort_by_key(|p| p.doc);
+                    }
                 }
             }
         }

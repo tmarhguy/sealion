@@ -40,6 +40,12 @@ impl SegmentStats {
 }
 
 /// An opened, fully verified segment.
+///
+/// Posting lists decode on first access and memoize (milestone 16): segment
+/// files are immutable, so decoded postings are analysis-independent raw
+/// data that never invalidates. CRCs are verified at open over every block
+/// plus on first decode; cache hits skip re-verification. Counters back
+/// the cache-justification benchmark (§72).
 #[derive(Debug, Clone)]
 pub struct SegmentReader {
     path: PathBuf,
@@ -51,6 +57,14 @@ pub struct SegmentReader {
     file_bytes: usize,
     // Raw file retained for block slicing (borrowed by postings calls).
     data: Vec<u8>,
+    postings_cache: std::cell::RefCell<std::collections::HashMap<(Field, String), Vec<Posting>>>,
+    cache_hits: std::cell::Cell<u64>,
+    cache_misses: std::cell::Cell<u64>,
+    /// Memoized field lengths (milestone 16). Lengths are fixed for the
+    /// index's analysis configuration; callers must use the same analysis
+    /// the segment was built with (true for every in-repo path — indexing
+    /// and search share `cfg.analysis`).
+    lengths_cache: std::cell::RefCell<std::collections::HashMap<(DocId, Field), usize>>,
 }
 
 impl SegmentReader {
@@ -165,6 +179,10 @@ impl SegmentReader {
             },
             file_bytes: data.len(),
             data,
+            postings_cache: std::cell::RefCell::new(std::collections::HashMap::new()),
+            cache_hits: std::cell::Cell::new(0),
+            cache_misses: std::cell::Cell::new(0),
+            lengths_cache: std::cell::RefCell::new(std::collections::HashMap::new()),
         };
         // Verify blocks + load metadata/stats (needs &self block access).
         let mut this = this;
@@ -280,8 +298,48 @@ impl SegmentReader {
         self.docs.get(&id)
     }
 
-    /// Decode one term's posting list with positions.
+    /// Posting-list cache stats (hits, misses) for benchmark justification.
+    pub fn cache_stats(&self) -> (u64, u64) {
+        (self.cache_hits.get(), self.cache_misses.get())
+    }
+
+    /// Drop memoized postings (frees RAM; next access re-decodes).
+    pub fn clear_postings_cache(&self) {
+        self.postings_cache.borrow_mut().clear();
+    }
+
+    /// Memoized field length for one document field. First touch analyzes
+    /// the stored document; later touches (same analysis) are O(1).
+    pub fn memo_field_length(
+        &self,
+        doc: DocId,
+        field: Field,
+        analyze: impl Fn(&Document) -> usize,
+    ) -> usize {
+        if let Some(&n) = self.lengths_cache.borrow().get(&(doc, field)) {
+            return n;
+        }
+        let n = self.get(doc).map(analyze).unwrap_or(0);
+        self.lengths_cache.borrow_mut().insert((doc, field), n);
+        n
+    }
+
+    /// Decode one term's posting list with positions (memoized).
     pub fn postings(&self, field: Field, term: &str) -> Result<Vec<Posting>> {
+        if let Some(hit) = self.postings_cache.borrow().get(&(field, term.to_string())) {
+            self.cache_hits.set(self.cache_hits.get() + 1);
+            return Ok(hit.clone());
+        }
+        let decoded = self.decode_postings(field, term)?;
+        self.cache_misses.set(self.cache_misses.get() + 1);
+        self.postings_cache
+            .borrow_mut()
+            .insert((field, term.to_string()), decoded.clone());
+        Ok(decoded)
+    }
+
+    /// Decode one term's posting list with positions (uncached core).
+    fn decode_postings(&self, field: Field, term: &str) -> Result<Vec<Posting>> {
         let e = match self.dict.lookup(field, term) {
             Some(e) => e,
             None => return Ok(Vec::new()),

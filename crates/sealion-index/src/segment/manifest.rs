@@ -20,8 +20,13 @@ use super::MANIFEST_NAME;
 pub struct Manifest {
     /// Monotonic generation; bumped on every publication.
     pub generation: u64,
-    /// Live segment files in publication order.
+    /// Live segment files in publication order (oldest → newest).
+    /// Newer segments shadow older ones for the same DocId (§24).
     pub segments: Vec<String>,
+    /// Tombstoned DocIds (§24). Deleted docs stay invisible until a merge
+    /// drops them permanently. `Default` keeps old manifests loadable.
+    #[serde(default)]
+    pub deleted: Vec<u64>,
 }
 
 impl Manifest {
@@ -29,7 +34,28 @@ impl Manifest {
         Self {
             generation: 0,
             segments: Vec::new(),
+            deleted: Vec::new(),
         }
+    }
+
+    /// Mark a DocId deleted (idempotent). Bumps generation so caches
+    /// keyed on generation invalidate (§73).
+    pub fn add_tombstone(&mut self, id: u64) {
+        if !self.deleted.contains(&id) {
+            self.deleted.push(id);
+            self.deleted.sort_unstable();
+        }
+        self.generation += 1;
+    }
+
+    /// Drop tombstones for docs no longer present in any live segment
+    /// (called after a merge eliminates them).
+    pub fn clear_tombstones(&mut self, ids: &[u64]) {
+        if ids.is_empty() {
+            return;
+        }
+        self.deleted.retain(|d| !ids.contains(d));
+        self.generation += 1;
     }
 
     /// Next segment id (one higher than any published so far).
