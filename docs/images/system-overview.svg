@@ -34,6 +34,6 @@
     <line x1="130" y1="129" x2="150" y2="129"/><line x1="260" y1="129" x2="280" y2="129"/>
     <line x1="390" y1="129" x2="410" y2="129"/><line x1="540" y1="129" x2="560" y2="129"/>
   </g>
-  <text x="20" y="178" font-size="11" fill="#555">Solid boxes run today; distribution, crawler, and product UI are roadmap (dashed in README).</text>
+  <text x="20" y="178" font-size="11" fill="#555">All boxes run — indexing, storage, search, crawl, distribution, product.</text>
   <text x="20" y="196" font-size="11" fill="#555">Readers verify checksums on open; publication is temp + fsync + verify + atomic rename.</text>
 </svg>
