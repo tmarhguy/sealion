@@ -36,8 +36,8 @@
     box.className = 'docs-search';
     var input = document.createElement('input');
     input.type = 'search';
-    input.placeholder = 'Search this manual…';
-    input.setAttribute('aria-label', 'Search this manual');
+    input.placeholder = 'Search this manual… ( / )';
+    input.setAttribute('aria-label', 'Search this manual (shortcut: /)');
     input.autocomplete = 'off';
     box.appendChild(input);
     var results = document.createElement('ul');
@@ -120,6 +120,16 @@
         input.dispatchEvent(new Event('input'));
         input.blur();
       }
+    });
+
+    // Docs-site shortcut (RISC-V/Antora style): "/" focuses search.
+    // Ignored while typing in any field or with a modifier held.
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== '/' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      ev.preventDefault();
+      input.focus();
     });
   }
 
