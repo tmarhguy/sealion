@@ -4,8 +4,8 @@
   no build step, served embedded by sealion-api (include_str!). Vanilla JS
   organized as small modules: api client, search box + suggestions, results,
   filters, ranking explanation, diagnostics, router, and four views
-  (home / search / stats / about). The React product remains future work;
-  this file proves the API contract it will consume.
+   (home / search / stats / about). This file is the product search UI;
+   it exercises the /api/* contract directly in the browser.
 
   Honesty rules enforced here (spec §15): every number shown comes from a
   real endpoint. Unavailable metrics (percentiles, doc counts, categories,
@@ -325,7 +325,7 @@
     <div class="examples" id="home-examples" aria-label="Example queries"></div>
   </div>
   <footer class="site">
-    <div><a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="/stats">Stats</a></div>
+    <div><a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="https://tmarhguy.github.io/sealion/">Docs</a>·<a href="/stats">Stats</a></div>
     <div class="sub">Built from crawler to ranking engine.</div>
     <div class="live" id="foot-stats"></div>
   </footer>
@@ -375,7 +375,7 @@
     </details>
   </div>
   <footer class="site">
-    <div><a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="/stats">Stats</a></div>
+    <div><a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="https://tmarhguy.github.io/sealion/">Docs</a>·<a href="/stats">Stats</a></div>
     <div class="sub">Built from crawler to ranking engine.</div>
   </footer>
 </section>
@@ -388,7 +388,7 @@
     <div id="stats-body"><p>Loading…</p></div>
     <p><button class="chip" id="stats-refresh" type="button">Refresh</button></p>
   </div>
-  <footer class="site"><a href="/">Home</a>·<a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a></footer>
+  <footer class="site"><a href="/">Home</a>·<a href="/about">About</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="https://tmarhguy.github.io/sealion/">Docs</a></footer>
 </section>
 
 <!-- ================= ABOUT ================= -->
@@ -417,7 +417,7 @@
     </p>
     <p class="sub">Architecture. Compilers. Kernels. Databases. Silicon.</p>
   </div>
-  <footer class="site"><a href="/">Home</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="/stats">Stats</a></footer>
+  <footer class="site"><a href="/">Home</a>·<a href="https://github.com/tmarhguy/sealion">GitHub</a>·<a href="https://tmarhguy.github.io/sealion/">Docs</a>·<a href="/stats">Stats</a></footer>
 </section>
 </main>
 
