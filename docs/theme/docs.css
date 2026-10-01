@@ -1,0 +1,117 @@
+/* Reusable docs theme — overrides only.
+   Asciidoctor's built-in HTML5 stylesheet remains the visual foundation.
+   No project names here: this file is shared across repositories. */
+
+/* --- Sidebar layout: independent scroll, keep default fixed nav --- */
+#toc.toc2 {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 2em;
+}
+
+/* --- Collapse/expand controls (subtle, unobtrusive) --- */
+.nav-controls {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  padding: 0.4em 0 0.6em 0;
+  font-size: 0.82em;
+}
+.nav-controls button {
+  background: none;
+  border: 1px solid #d7d7d7;
+  border-radius: 4px;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 0.15em 0.55em;
+}
+.nav-controls button:hover {
+  border-color: #999;
+  color: #111;
+}
+.nav-controls button:focus-visible {
+  outline: 2px solid #215494;
+  outline-offset: 1px;
+}
+
+/* --- Disclosure toggles: separate from title links --- */
+#toc ul { list-style: none; }
+#toc li { position: relative; }
+#toc li .nav-toggle {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 0.8em;
+  line-height: 1;
+  padding: 0.2em 0.35em 0.2em 0;
+  min-width: 1.6em;
+}
+#toc li .nav-toggle:hover { color: #111; }
+#toc li .nav-toggle:focus-visible {
+  outline: 2px solid #215494;
+  outline-offset: 1px;
+}
+/* Collapsed subtrees hide children; works only when JS adds the class,
+   so no-JS degrades to a fully expanded tree. */
+#toc li.nav-collapsed > ul { display: none; }
+
+/* --- Active section: subtle engineering highlight --- */
+#toc a.toc-active {
+  color: #111;
+  font-weight: 600;
+  border-left: 3px solid #215494;
+  padding-left: 0.4em;
+}
+#toc a { border-left: 3px solid transparent; }
+#toc a:focus-visible {
+  outline: 2px solid #215494;
+  outline-offset: 1px;
+}
+
+/* --- Docs search box (injected by search.js; hidden without JS) --- */
+.docs-search { margin: 0.4em 0 0.6em 0; }
+.docs-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d7d7d7;
+  border-radius: 4px;
+  font-size: 0.85em;
+  padding: 0.4em 0.55em;
+}
+.docs-search input:focus {
+  border-color: #215494;
+  outline: 2px solid #215494;
+  outline-offset: 0;
+}
+.docs-search-results {
+  list-style: none;
+  margin: 0.3em 0 0 0;
+  padding: 0;
+  font-size: 0.85em;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.docs-search-results li a {
+  display: block;
+  padding: 0.25em 0.3em;
+  text-decoration: none;
+}
+.docs-search-results li a:hover { text-decoration: underline; }
+.docs-search-empty { color: #777; font-size: 0.82em; padding: 0.3em 0; }
+/* Filtered-out TOC entries while searching */
+#toc.toc-searching li.toc-no-match { display: none; }
+#toc.toc-searching li.toc-match > a { font-weight: 600; }
+
+/* --- Readability: restrained spacing, scrollable wide content --- */
+#content { max-width: 60em; }
+.tableblock table { display: block; overflow-x: auto; max-width: 100%; }
+.listingblock pre, .literalblock pre { overflow-x: auto; }
+.imageblock img { max-width: 100%; height: auto; }
+
+/* --- Narrow screens: keep docs readable, sidebar stacks --- */
+@media screen and (max-width: 768px) {
+  #content { max-width: 100%; }
+  .nav-controls { font-size: 0.9em; }
+}
