@@ -27,6 +27,12 @@ fi
 
 mkdir -p "$OUT_DIR/theme" "$OUT_DIR/images"
 
+# Version stamp, RISC-V-spec style ("Version <sha>, <date>" under the
+# title). Derived from git at build time; falls back to the build date
+# outside a git checkout. Pure Asciidoctor revision attributes.
+REVDATE="$(git -C "$REPO_ROOT" log -1 --format=%cs 2>/dev/null || date +%F)"
+REVNUM="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unversioned)"
+
 # Single-page manual. docinfo=shared + docinfodir pulls docs/theme/docinfo.html
 # (CSS/JS injection) without editing generated HTML afterwards.
 asciidoctor \
@@ -34,6 +40,8 @@ asciidoctor \
   --safe-mode safe \
   --attribute docinfo=shared \
   --attribute docinfodir="$REPO_ROOT/docs/theme" \
+  --attribute revdate="$REVDATE" \
+  --attribute revnumber="$REVNUM" \
   --out-file "$OUT_FILE" \
   "$SRC"
 
