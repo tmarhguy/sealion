@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SeaLion Search</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1rem; }
+h1 { letter-spacing: .1em; }
+#q { width: 70%; padding: .5rem; font-size: 1rem; }
+button { padding: .5rem 1rem; font-size: 1rem; }
+.result { margin: 1.2rem 0; }
+.result .title { font-size: 1.1rem; }
+.result .url { color: #555; font-size: .85rem; }
+.result .snip { margin-top: .2rem; }
+mark { background: #fff3b0; }
+#meta { color: #555; font-size: .85rem; }
+#ac { border: 1px solid #ccc; max-width: 70%; }
+#ac div { padding: .25rem .5rem; cursor: pointer; }
+#ac div:hover { background: #eee; }
+</style>
+</head>
+<body>
+<h1>SEALION</h1>
+<input id="q" type="text" placeholder="Search the corpus..." autocomplete="off">
+<button onclick="search()">Search</button>
+<div id="ac"></div>
+<p id="meta"></p>
+<div id="results"></div>
+<script>
+const q = document.getElementById('q');
+const ac = document.getElementById('ac');
+q.addEventListener('input', async () => {
+  if (q.value.length < 2) { ac.innerHTML = ''; return; }
+  const r = await fetch('/api/complete?prefix=' + encodeURIComponent(q.value) + '&limit=6');
+  const j = await r.json();
+  ac.innerHTML = (j.completions || []).map(c =>
+    `<div onclick="pick('${c.term.replace(/'/g, "\\'")}')">${c.term} <small>(${c.df})</small></div>`).join('');
+});
+function pick(t) { q.value = t; ac.innerHTML = ''; search(); }
+q.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+async function search() {
+  const r = await fetch('/api/search?q=' + encodeURIComponent(q.value) + '&limit=20');
+  const j = await r.json();
+  document.getElementById('meta').textContent =
+    `${j.results.length} result(s) in ${j.took_ms.toFixed(2)}ms${j.partial ? ' (PARTIAL)' : ''}`;
+  document.getElementById('results').innerHTML = j.results.map(h =>
+    `<div class="result"><div class="title">${esc(h.title)} <small>${h.score.toFixed(2)}</small></div>` +
+    `<div class="url">${esc(h.url)}</div><div class="snip">${h.snippet}</div></div>`).join('');
+}
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
