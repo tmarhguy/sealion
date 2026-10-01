@@ -8,22 +8,31 @@
   <a href="#license-and-author"><img alt="License: TBD" src="https://img.shields.io/badge/license-TBD-990000"></a>
 </p>
 
-SeaLion is a search engine built the hard way: its analysis, inverted
-index, segments, compression, and ranking are implemented directly, not
-delegated to an existing engine. No Lucene, no Elasticsearch, no
-OpenSearch, no Solr, no Meilisearch, no Typesense.
+<p align="center">
+  <a href="https://sealion.tmarhguy.com" style="display:inline-block;background:#1d4e89;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">Try Live Search</a>
+  <a href="https://tmarhguy.github.io/sealion/" style="display:inline-block;background:#2e7d32;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">Read the Docs</a>
+</p>
 
-Honest status: milestones 01–20 are done — a working system, not a
-roadmap. The engine analyzes text, ranks with field-aware BM25 over
-immutable versioned segments, skips with exact Block-Max WAND, tolerates
-typos with BK-tree correction, crawls politely with HTML/image-alt
-extraction, measures relevance (nDCG@10 = 0.9314 seed), shards and
-replicates with failover, and serves JSON + a search page over HTTP.
+<p align="center">
+  <img alt="SeaLion demo — search page with BM25-ranked hits (2x speed)" src="media/demo/sealion-demo.gif" width="800">
+  <br>
+  <em>Demo: the search page — type a query, get BM25-ranked hits with snippets (2x speed).</em>
+</p>
+
+SeaLion is a distributed full-text search engine built from first
+principles in Rust: its analysis, inverted index, segments,
+compression, and ranking are implemented directly, not delegated to
+an existing engine. No Lucene, no Elasticsearch, no OpenSearch, no
+Solr, no Meilisearch, no Typesense.
+
+What it is: the engine analyzes text, ranks with field-aware BM25
+over immutable versioned segments, skips with exact Block-Max WAND,
+tolerates typos with BK-tree correction, crawls politely with
+HTML/image-alt extraction, measures relevance (nDCG@10 = 0.9314
+seed), shards and replicates with failover, and serves JSON + a
+dependency-free search page over HTTP (`sealion serve`).
 Measured (release): 5114 docs/s indexing, 271 qps exact WAND search.
-The one real gap: the product UI is a dependency-free search page, not
-the React/TypeScript build (§78) — it consumes the same `/api/*`
-contract the React app will use. This README describes only what is in
-the working tree.
+This README describes only what is in the working tree.
 
 **Explore:** [architecture](docs/architecture.md) ·
 [segment format](docs/index-format.md) ·
@@ -253,8 +262,7 @@ completes **all 20**: analysis → memory index → segments → compression
 → generations → BM25 → query language → WAND → typos/autocomplete →
 crawler → relevance science → distributed search → replicas →
 rebalancing → profiling → adversarial testing → advanced ranking →
-product (API + search page; React build is the documented remaining
-slice of §78).
+product (JSON API + dependency-free search page).
 
 ## Core rules
 
