@@ -1,4 +1,9 @@
 //! SeaLion query engine: parser, planner, execution, WAND, ranking,
 //! snippets, spelling (spec §27–50).
 //!
-//! Milestone 02+ fills this crate. See `docs/architecture.md` for the plan.
+//! Milestone 03 delivers Boolean queries over the in-memory index plus the
+//! reference correctness oracle (§26):
+//!
+//! - [`query`]: Boolean query AST over normalized terms.
+
+pub mod query;

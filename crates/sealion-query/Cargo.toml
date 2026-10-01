@@ -5,3 +5,4 @@ edition.workspace = true
 
 [dependencies]
 sealion-core.workspace = true
+sealion-index.workspace = true
