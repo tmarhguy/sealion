@@ -1,0 +1,26 @@
+{
+  "title": "Publication protocol",
+  "subtitle": "Crash-safe segment publication in five steps",
+  "rows": [
+    [
+      "Temp file",
+      "Write the segment to a temp file in the data directory."
+    ],
+    [
+      "Fsync",
+      "Flush and fsync the temp file."
+    ],
+    [
+      "Verify",
+      "Re-read the temp file: checksums, ordering, and counts."
+    ],
+    [
+      "Rename",
+      "Atomically rename the segment into place."
+    ],
+    [
+      "Publish",
+      "Publish the new generation with an atomic manifest rename."
+    ]
+  ]
+}

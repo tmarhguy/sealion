@@ -7,22 +7,8 @@ this chapter summarizes it and states the invariants the code enforces.
 
 === Segment layout
 
-[source,text]
-----
-+-------------------------------+
-| header                  60 B  |  magic SEALION1, version, flags, counts, offsets, CRC
-+-------------------------------+
-| postings + positions blocks   |  delta+varint DocIDs + gapped positions, per-term CRCs
-+-------------------------------+
-| dictionary  (count + entries) |  sorted by (field, term): offsets, df, bounds, CRCs
-+-------------------------------+
-| document metadata (stored)    |  DocID + JSON Document per doc
-+-------------------------------+
-| statistics                    |  per-field token totals (BM25 avgdl inputs)
-+-------------------------------+
-| footer                  16 B  |  magic + file CRC32
-+-------------------------------+
-----
+.Segment file layout
+image::segment-layout.svg[Segment file layout: header, then postings + positions, then dictionary, then document metadata, then statistics, then footer,width=800,link=images/segment-layout.svg]
 
 .Header (60 bytes, little-endian)
 [cols="1,1,2",options="header"]
@@ -72,6 +58,9 @@ average length is `total / doc_count`.
 |===
 
 === Publication protocol
+
+.Publication protocol
+image::publication-protocol.svg[Publication protocol: temp file, then fsync, then verify, then rename, then publish,width=800,link=images/publication-protocol.svg]
 
 . Write the segment to a temp file in the data directory.
 . Flush and fsync the temp file.

@@ -1,0 +1,18 @@
+{
+  "title": "SeaLion system overview",
+  "subtitle": "Ingestion, storage, and retrieval",
+  "rows": [
+    [
+      "Indexing",
+      "Corpus files \u2192 analysis \u2192 MemIndex \u2192 segment writer"
+    ],
+    [
+      "Storage",
+      "Immutable .seal segments; manifest.json publishes the current generation."
+    ],
+    [
+      "Search",
+      "Query \u2192 normalization \u2192 ranked retrieval \u2192 snippets and explanations"
+    ]
+  ]
+}

@@ -15,8 +15,7 @@ This manual is the engineering reference for that system.
 It records design intent, interfaces, verification strategy,
 on-disk detail, and measured behaviour in one numbered document.
 
-The fastest way to see what the system is: the demo recording and
-live links at the top of this manual.
+Start with the <<quick-start,Quick start>> to build the project and run a local search.
 
 === Scope
 
@@ -46,12 +45,14 @@ chapters 6–8 give the evidence that the system behaves as claimed.
 Each chapter is self-contained enough to be entered directly from the
 sidebar once the overview in <<architecture,Architecture>> is familiar.
 
+.Reading order
+image::reading-order.svg[Reading order: context chapters, then working model, then evidence, then direct sidebar entry,width=800,link=images/reading-order.svg]
+
 === Conventions
 
 .Normal cross-reference and link usage
 * Internal references look like this: <<verification,Verification>>.
-* External links look like this: https://stnolting.github.io/neorv32/[NEORV32 documentation],
-the visual reference for this manual's style.
+* External links look like this: https://www.rust-lang.org/[Rust documentation].
 * Inline code uses monospace, e.g. `sealion index`, `manifest.json`, `DocId`.
 * File paths are repository-relative, e.g. `crates/sealion-index/src/merge.rs`.
 
@@ -68,6 +69,6 @@ Roadmap items stay labelled roadmap; unverified claims stay out of
 this manual. Where a number has not been measured it is written
 `TBD (unmeasured)`.
 
-TIP: The sidebar on the left is collapsible.
-Select a chapter title to navigate; select its arrow control to
-expand or collapse its subsections without leaving the page.
+TIP: Select a chapter in the left sidebar, then use “On this page” to jump
+to a subsection on wide screens. On smaller screens, open the menu to
+switch chapters. Press kbd:[/] or kbd:[Ctrl+K] / kbd:[⌘+K] to search the manual.

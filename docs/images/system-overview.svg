@@ -1,39 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="220" viewBox="0 0 720 220" font-family="Helvetica, Arial, sans-serif">
-  <rect x="1" y="1" width="718" height="218" fill="#ffffff" stroke="#999" stroke-width="1"/>
-  <text x="20" y="24" font-size="12" fill="#333" font-weight="bold">Indexing path (batch, crash-safe)</text>
-  <g font-size="11" fill="#111">
-    <rect x="20" y="36" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="30" y="50">corpus</text><text x="30" y="63">files</text>
-    <rect x="150" y="36" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="160" y="50">analyzer</text><text x="160" y="63">tokens</text>
-    <rect x="280" y="36" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="290" y="50">MemIndex</text><text x="290" y="63">postings</text>
-    <rect x="410" y="36" width="130" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="420" y="50">segment writer</text><text x="420" y="63">.seal + CRCs</text>
-    <rect x="560" y="36" width="130" height="34" fill="#e8f0e8" stroke="#2e7d32"/>
-    <text x="570" y="50">manifest.json</text><text x="570" y="63">generation</text>
-  </g>
-  <g stroke="#666" stroke-width="1" marker-end="none">
-    <line x1="130" y1="53" x2="150" y2="53"/><line x1="260" y1="53" x2="280" y2="53"/>
-    <line x1="390" y1="53" x2="410" y2="53"/><line x1="540" y1="53" x2="560" y2="53"/>
-  </g>
-  <text x="20" y="100" font-size="12" fill="#333" font-weight="bold">Search path (latency-sensitive, oracle-verified)</text>
-  <g font-size="11" fill="#111">
-    <rect x="20" y="112" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="30" y="126">query</text><text x="30" y="139">text</text>
-    <rect x="150" y="112" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="160" y="126">parse +</text><text x="160" y="139">normalize</text>
-    <rect x="280" y="112" width="110" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="290" y="126">Boolean /</text><text x="290" y="139">BM25 rank</text>
-    <rect x="410" y="112" width="130" height="34" fill="#f4f4f4" stroke="#666"/>
-    <text x="420" y="126">snippets +</text><text x="420" y="139">--explain</text>
-    <rect x="560" y="112" width="130" height="34" fill="#e8eef6" stroke="#215494"/>
-    <text x="570" y="126">ranked hits</text><text x="570" y="139">score, snippet</text>
-  </g>
-  <g stroke="#666" stroke-width="1">
-    <line x1="130" y1="129" x2="150" y2="129"/><line x1="260" y1="129" x2="280" y2="129"/>
-    <line x1="390" y1="129" x2="410" y2="129"/><line x1="540" y1="129" x2="560" y2="129"/>
-  </g>
-  <text x="20" y="178" font-size="11" fill="#555">All boxes run — indexing, storage, search, crawl, distribution, product.</text>
-  <text x="20" y="196" font-size="11" fill="#555">Readers verify checksums on open; publication is temp + fsync + verify + atomic rename.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="372" viewBox="0 0 800 372" role="img" aria-labelledby="title desc">
+<title id="title">SeaLion system overview</title><desc id="desc">Indexing: Corpus files → analysis → MemIndex → segment writer; Storage: Immutable .seal segments; manifest.json publishes the current generation.; Search: Query → normalization → ranked retrieval → snippets and explanations</desc>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:var(--diagram-ink,#202020)}.detail{font-size:14px;fill:var(--diagram-muted,#595959)}.label{font-size:16px;font-weight:600}.num{font-family:monospace;font-size:12px;fill:var(--diagram-number,#757575)}</style>
+<rect x=".5" y=".5" width="799" height="371" rx="10" fill="var(--diagram-paper,#fff)" stroke="var(--diagram-line,#dedede)"/>
+<text x="28" y="35" class="label">SeaLion system overview</text>
+<text x="28" y="58" class="detail">Ingestion, storage, and retrieval</text>
+<rect x="28" y="78" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="107" class="num">01</text>
+<text x="80" y="107" class="label">Indexing</text>
+<text x="80" y="129" class="detail">Corpus files → analysis → MemIndex → segment writer</text>
+<path d="M 57 150 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="166" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="195" class="num">02</text>
+<text x="80" y="195" class="label">Storage</text>
+<text x="80" y="217" class="detail">Immutable .seal segments; manifest.json publishes the current generation.</text>
+<path d="M 57 238 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="254" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="283" class="num">03</text>
+<text x="80" y="283" class="label">Search</text>
+<text x="80" y="305" class="detail">Query → normalization → ranked retrieval → snippets and explanations</text>
 </svg>

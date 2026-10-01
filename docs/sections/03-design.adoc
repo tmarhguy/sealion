@@ -29,15 +29,8 @@ are indexed and weighted separately.
 
 === Text analysis
 
-[source,text]
-----
-raw text
-  -> Unicode-alphanumeric tokenizer
-  -> case folding
-  -> stop-word handling (with position gaps)
-  -> Porter stemming (per-field configurable)
-  -> terms + positions
-----
+.Text analysis
+image::analysis-path.svg[Text analysis: raw text, then tokenize, then case folding, then stop words, then porter stemming, then terms + positions,width=800,link=images/analysis-path.svg]
 
 Stop words leave gaps rather than collapsing positions, so the phrase
 `"distributed systems"` never falsely matches across a removed word.
@@ -90,6 +83,9 @@ Any future change requires a benchmark comparison
 (see <<performance,Performance>>).
 
 === Generations and merging
+
+.Generations and merging
+image::generations.svg[Generations: write buffer, then immutable segments, then manifest commit, with shadowing, tombstones, and merge,width=800,link=images/generations.svg]
 
 Segments accumulate in generations ordered by `manifest.json`.
 Merging rebuilds the live document set into fewer segments:

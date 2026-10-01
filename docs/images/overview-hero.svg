@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+<title id="title">From query to ranked results</title><desc id="desc">A query is analyzed, matched to immutable index segments, and ranked using BM25.</desc>
+<rect x="1" y="1" width="1198" height="358" rx="10" fill="var(--diagram-paper,#fff)" stroke="var(--diagram-line,#dedede)"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="36" y="43" fill="var(--diagram-muted,#595959)" font-size="15">From query to ranked results</text>
+<rect x="36" y="78" width="344" height="234" rx="7" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="58" y="112" font-size="12" fill="var(--diagram-number,#757575)">01</text>
+<text x="58" y="150" font-size="22" font-weight="600" fill="var(--diagram-ink,#202020)">Query</text>
+<text x="58" y="178" font-size="14" fill="var(--diagram-muted,#595959)">Parse and normalize the search text</text>
+<rect x="58" y="206" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="68" y="221" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">&quot;distributed systems&quot;</text>
+<rect x="58" y="235" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="68" y="250" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">terms + query constraints</text>
+<path d="M386 196h34m-6-5 6 5-6 5" fill="none" stroke="var(--diagram-number,#757575)"/>
+<rect x="428" y="78" width="344" height="234" rx="7" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="450" y="112" font-size="12" fill="var(--diagram-number,#757575)">02</text>
+<text x="450" y="150" font-size="22" font-weight="600" fill="var(--diagram-ink,#202020)">Index</text>
+<text x="450" y="178" font-size="14" fill="var(--diagram-muted,#595959)">Read fielded, positional postings</text>
+<rect x="450" y="206" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="460" y="221" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">immutable .seal segments</text>
+<rect x="450" y="235" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="460" y="250" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">manifest.json</text>
+<path d="M778 196h34m-6-5 6 5-6 5" fill="none" stroke="var(--diagram-number,#757575)"/>
+<rect x="820" y="78" width="344" height="234" rx="7" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="842" y="112" font-size="12" fill="var(--diagram-number,#757575)">03</text>
+<text x="842" y="150" font-size="22" font-weight="600" fill="var(--diagram-ink,#202020)">Results</text>
+<text x="842" y="178" font-size="14" fill="var(--diagram-muted,#595959)">Rank matches and extract snippets</text>
+<rect x="842" y="206" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="852" y="221" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">BM25 score + document ID</text>
+<rect x="842" y="235" width="300" height="22" rx="3" fill="var(--diagram-edge,#f4f4f4)"/>
+<text x="852" y="250" font-size="12" font-family="monospace" fill="var(--diagram-muted,#595959)">title, URL, snippet</text>
+</g></svg>

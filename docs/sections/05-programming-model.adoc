@@ -58,6 +58,9 @@ expansion before execution.
 
 === Normalization and planning
 
+.Query pipeline
+image::query-pipeline.svg[Query pipeline: parse, then normalize, then plan, then execute and rank, then explain,width=800,link=images/query-pipeline.svg]
+
 . Parse raw text into a query AST (`Term`, `Phrase`, `Prefix`,
 `Fuzzy`, `Site`, `And` / `Or` / `Not`).
 . Normalize every term through the index analysis pipeline.

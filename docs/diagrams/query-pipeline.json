@@ -1,0 +1,26 @@
+{
+  "title": "Query pipeline",
+  "subtitle": "From raw text to explained ranked results",
+  "rows": [
+    [
+      "Parse",
+      "Raw text into a query AST: Term, Phrase, Prefix, Fuzzy, Site, And/Or/Not."
+    ],
+    [
+      "Normalize",
+      "Every term through the index analysis pipeline."
+    ],
+    [
+      "Plan",
+      "Evaluation order from document frequency and posting size."
+    ],
+    [
+      "Execute",
+      "Boolean execution with exhaustive field-weighted BM25 ranking."
+    ],
+    [
+      "Explain",
+      "Parsed shape, tf/df/idf, field weights, and final score."
+    ]
+  ]
+}

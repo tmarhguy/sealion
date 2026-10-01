@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="636" viewBox="0 0 800 636" role="img" aria-labelledby="title desc">
+<title id="title">Segment file layout</title><desc id="desc">Header: SEALION1 magic, version, flags, counts, offsets, and header CRC; Postings + positions: Delta-varint document IDs, gapped positions, and per-term CRCs; Dictionary: Count and entries sorted by (field, term); offsets, df, bounds, and CRCs; Document metadata: Document ID and stored JSON document; Statistics: Per-field token totals used to calculate BM25 average document length; Footer: Magic and whole-file CRC32</desc>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:var(--diagram-ink,#202020)}.detail{font-size:14px;fill:var(--diagram-muted,#595959)}.label{font-size:16px;font-weight:600}.num{font-family:monospace;font-size:12px;fill:var(--diagram-number,#757575)}</style>
+<rect x=".5" y=".5" width="799" height="635" rx="10" fill="var(--diagram-paper,#fff)" stroke="var(--diagram-line,#dedede)"/>
+<text x="28" y="35" class="label">Segment file layout</text>
+<text x="28" y="58" class="detail">Physical order in a .seal file · diagram is not to scale</text>
+<rect x="28" y="78" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="107" class="num">01</text>
+<text x="80" y="107" class="label">Header</text>
+<text x="80" y="129" class="detail">SEALION1 magic, version, flags, counts, offsets, and header CRC</text>
+<text x="750" y="107" text-anchor="end" class="num">60 bytes</text>
+<path d="M 57 150 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="166" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="195" class="num">02</text>
+<text x="80" y="195" class="label">Postings + positions</text>
+<text x="80" y="217" class="detail">Delta-varint document IDs, gapped positions, and per-term CRCs</text>
+<text x="750" y="195" text-anchor="end" class="num">Variable</text>
+<path d="M 57 238 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="254" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="283" class="num">03</text>
+<text x="80" y="283" class="label">Dictionary</text>
+<text x="80" y="305" class="detail">Count and entries sorted by (field, term); offsets, df, bounds, and CRCs</text>
+<text x="750" y="283" text-anchor="end" class="num">Variable</text>
+<path d="M 57 326 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="342" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="371" class="num">04</text>
+<text x="80" y="371" class="label">Document metadata</text>
+<text x="80" y="393" class="detail">Document ID and stored JSON document</text>
+<text x="750" y="371" text-anchor="end" class="num">Variable</text>
+<path d="M 57 414 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="430" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="459" class="num">05</text>
+<text x="80" y="459" class="label">Statistics</text>
+<text x="80" y="481" class="detail">Per-field token totals used to calculate BM25 average document length</text>
+<text x="750" y="459" text-anchor="end" class="num">Variable</text>
+<path d="M 57 502 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="518" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="547" class="num">06</text>
+<text x="80" y="547" class="label">Footer</text>
+<text x="80" y="569" class="detail">Magic and whole-file CRC32</text>
+<text x="750" y="547" text-anchor="end" class="num">16 bytes</text>
+</svg>

@@ -1,0 +1,22 @@
+{
+  "title": "Verification loop",
+  "subtitle": "Oracle agreement from local gates to CI",
+  "rows": [
+    [
+      "Reference oracle",
+      "A slow engine computes the exact answer for any query shape."
+    ],
+    [
+      "Properties",
+      "Codec roundtrips, merge preservation, and top-k agreement."
+    ],
+    [
+      "Local gates",
+      "Formatting, clippy, and the full workspace test suite."
+    ],
+    [
+      "CI parity",
+      "Every push runs the same gates; new features add oracle tests first."
+    ]
+  ]
+}

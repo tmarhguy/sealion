@@ -1,0 +1,26 @@
+{
+  "title": "Search path",
+  "subtitle": "From query text to ranked results",
+  "rows": [
+    [
+      "Query",
+      "Receive the query through the command-line or HTTP interface."
+    ],
+    [
+      "Parse + normalize",
+      "Apply the same text analysis used during indexing."
+    ],
+    [
+      "Execute + rank",
+      "Evaluate Boolean constraints and rank the live document set."
+    ],
+    [
+      "Explain + extract",
+      "Produce snippets and per-term score explanations."
+    ],
+    [
+      "Results",
+      "Return score, title, URL, and snippet for each ranked hit."
+    ]
+  ]
+}

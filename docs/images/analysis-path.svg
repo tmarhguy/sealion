@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="636" viewBox="0 0 800 636" role="img" aria-labelledby="title desc">
+<title id="title">Text analysis</title><desc id="desc">Raw text: Read the text of an individual field.; Tokenize: Split using Unicode-alphanumeric boundaries.; Case folding: Normalize character case.; Stop words: Remove configured stop words while preserving position gaps.; Porter stemming: Apply stemming when enabled for the field.; Terms + positions: Emit normalized tokens and their positions.</desc>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:var(--diagram-ink,#202020)}.detail{font-size:14px;fill:var(--diagram-muted,#595959)}.label{font-size:16px;font-weight:600}.num{font-family:monospace;font-size:12px;fill:var(--diagram-number,#757575)}</style>
+<rect x=".5" y=".5" width="799" height="635" rx="10" fill="var(--diagram-paper,#fff)" stroke="var(--diagram-line,#dedede)"/>
+<text x="28" y="35" class="label">Text analysis</text>
+<text x="28" y="58" class="detail">Shared by document indexing and query normalization</text>
+<rect x="28" y="78" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="107" class="num">01</text>
+<text x="80" y="107" class="label">Raw text</text>
+<text x="80" y="129" class="detail">Read the text of an individual field.</text>
+<path d="M 57 150 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="166" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="195" class="num">02</text>
+<text x="80" y="195" class="label">Tokenize</text>
+<text x="80" y="217" class="detail">Split using Unicode-alphanumeric boundaries.</text>
+<path d="M 57 238 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="254" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="283" class="num">03</text>
+<text x="80" y="283" class="label">Case folding</text>
+<text x="80" y="305" class="detail">Normalize character case.</text>
+<path d="M 57 326 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="342" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="371" class="num">04</text>
+<text x="80" y="371" class="label">Stop words</text>
+<text x="80" y="393" class="detail">Remove configured stop words while preserving position gaps.</text>
+<path d="M 57 414 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="430" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="459" class="num">05</text>
+<text x="80" y="459" class="label">Porter stemming</text>
+<text x="80" y="481" class="detail">Apply stemming when enabled for the field.</text>
+<path d="M 57 502 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="518" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="547" class="num">06</text>
+<text x="80" y="547" class="label">Terms + positions</text>
+<text x="80" y="569" class="detail">Emit normalized tokens and their positions.</text>
+</svg>

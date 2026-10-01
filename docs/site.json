@@ -1,0 +1,36 @@
+{
+  "name": "SeaLion",
+  "label": "Documentation",
+  "title": "SeaLion documentation",
+  "description": "Architecture, interfaces, storage format, verification, and performance of the SeaLion search engine.",
+  "url": "",
+  "image": "images/social-card.png",
+  "about": "#about",
+  "repository": "https://github.com/tmarhguy/sealion",
+  "website": "https://sealion.tmarhguy.com",
+  "source": "https://github.com/tmarhguy/sealion/blob/main/docs/index.adoc",
+  "chapterSources": {
+    "introduction": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/01-introduction.adoc",
+    "architecture": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/02-architecture.adoc",
+    "design": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/03-design.adoc",
+    "interfaces": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/04-interfaces.adoc",
+    "programming-model": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/05-programming-model.adoc",
+    "verification": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/06-verification.adoc",
+    "implementation": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/07-implementation.adoc",
+    "performance": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/08-performance.adoc",
+    "limitations": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/09-limitations.adoc",
+    "about": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/10-about.adoc",
+    "template": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/11-template.adoc"
+  },
+  "groups": {
+    "0": "Documentation",
+    "2": "Reference",
+    "6": "Validation",
+    "10": "Author",
+    "11": "Template"
+  },
+  "hero": {
+    "image": "images/sealion-demo.gif",
+    "alt": "SeaLion demo — search page with BM25-ranked hits (2x speed)."
+  }
+}

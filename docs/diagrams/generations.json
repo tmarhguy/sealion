@@ -1,0 +1,30 @@
+{
+  "title": "Generations and merging",
+  "subtitle": "MemIndex, immutable segments, and the manifest commit point",
+  "rows": [
+    [
+      "Write buffer",
+      "MemIndex accumulates fielded positional postings."
+    ],
+    [
+      "Immutable runs",
+      "Segments never change once published."
+    ],
+    [
+      "Commit point",
+      "manifest.json orders generations; readers see committed data only."
+    ],
+    [
+      "Shadowing",
+      "The newest version of an updated document wins."
+    ],
+    [
+      "Tombstones",
+      "Deleted documents are recorded and invisible to search."
+    ],
+    [
+      "Merge == rebuild",
+      "Consolidates live documents; drops tombstones and shadowed versions."
+    ]
+  ]
+}

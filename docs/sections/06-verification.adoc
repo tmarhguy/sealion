@@ -65,5 +65,8 @@ Unit tests live next to the code in `src/` files; integration gates
 live in `tests/` (`boolean_reference`, `segment_roundtrip`,
 `generations`, `phrase_rank`, `segment_search`, and others).
 
+.Verification loop
+image::verification-loop.svg[Verification loop: reference oracle, then properties, then local gates, then CI,width=800,link=images/verification-loop.svg]
+
 TIP: When adding a query feature, add the oracle comparison first.
 A failing oracle test is the specification; a passing one is the proof.

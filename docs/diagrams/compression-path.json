@@ -1,0 +1,26 @@
+{
+  "title": "Compression path",
+  "subtitle": "Delta and variable-byte postings encoding",
+  "rows": [
+    [
+      "Sorted DocIDs",
+      "Postings are ordered by document ID."
+    ],
+    [
+      "Delta encode",
+      "Store gaps between successive IDs."
+    ],
+    [
+      "Variable-byte",
+      "Compact integer encoding of the deltas."
+    ],
+    [
+      "Positions",
+      "Gapped per-document positions, stored in order."
+    ],
+    [
+      "Raw baseline",
+      "Uncompressed layout for benchmark comparison only."
+    ]
+  ]
+}

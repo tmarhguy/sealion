@@ -1,58 +1,75 @@
 = SeaLion Technical Reference Manual
 :author: Tyrone Marhguy
+:description: SeaLion technical documentation: architecture, interfaces, storage format, verification, and performance.
 :doctype: book
 :toc: left
 :toclevels: 3
 :sectnums:
 :sectnumlevels: 3
-:icons: font
+:icons!:
 :docinfo: shared
 :imagesdir: images
 :stem: latexmath
+:stylesheet!:
+:webfonts!:
+:sectlinks:
 :experimental:
 
 // Entry point for the static technical manual.
 // Add, remove, or reorder chapters by editing the include list below.
 // Each chapter lives in sections/ as NN-name.adoc with a level-1 (==) heading.
 
+[#overview]
 [preface]
-== SeaLion at a glance
+== SeaLion documentation
 
-SeaLion is a distributed full-text search engine built from first
-principles in Rust — BM25 ranking over immutable segments, exact
-skipping, typo tolerance, a polite crawler, and a search page
-served over HTTP.
-
-.Demo — the search page answering a query
-image::sealion-demo.gif[SeaLion demo — search page with BM25-ranked hits,align=center,width=560]
+SeaLion is a distributed full-text search engine written in Rust. This manual describes its architecture, command-line interfaces, query model, storage format, and verification strategy.
 
 ++++
-<div style="text-align:center; margin: 1.5rem 0;">
-<a href="https://sealion.tmarhguy.com" style="display:inline-block;background:#1d4e89;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">Try Live Search</a>
-<a href="https://github.com/tmarhguy/sealion" style="display:inline-block;background:#24292f;color:#ffffff;font-size:20px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;margin:6px;">GitHub Repository</a>
-</div>
+<!-- docs-hero -->
 ++++
 
-=== About this manual
+[#quick-start]
+=== Quick start
 
-This is the detailed technical reference for the project.
-It is the companion to the concise, GitHub-facing `README.md`:
+Install https://www.rust-lang.org/tools/install[Rust and Cargo], clone the https://github.com/tmarhguy/sealion[repository], and run these commands from its root directory.
 
-* `README.md` — project identity, status, and quick start.
-* `docs/` (this manual) — architecture, interfaces, verification, and
-implementation detail in engineering-manual style.
+[source,bash]
+----
+cargo build --workspace
+./target/debug/sealion index ./evaluation/corpus --data-dir ./sealion-data
+./target/debug/sealion search "distributed systems" --data-dir ./sealion-data
+./target/debug/sealion serve --bind 127.0.0.1:8080 --data-dir ./sealion-data
+----
 
-Conventions used throughout:
+Open http://127.0.0.1:8080[localhost:8080] to use the search interface. See <<interfaces,Interfaces>> for command options and configuration.
 
-* `monospace` marks commands, file paths, identifiers, and literals.
-* Section references such as `(§26)` point at the full requirements text
-where applicable to this project.
-* Unmeasured values are written as `TBD (unmeasured)` — never silently estimated.
-* Normative byte layouts and decision records live alongside this manual
-as Markdown (`docs/*.md`, `docs/adr/`) and are linked, not duplicated.
+[#contents]
+=== Contents
 
-TIP: Start with <<introduction,Introduction>> for scope and reading order,
-then <<architecture,Architecture>> for the system overview.
+[cols="1,3",options="header"]
+|===
+| Chapter | Coverage
+| <<introduction,Introduction>> | Scope, conventions, and reading order.
+| <<architecture,Architecture>> | Components, indexing and search paths, and crate responsibilities.
+| <<design,Design>> | Documents, analysis, inverted indexes, and segment generations.
+| <<interfaces,Interfaces>> | Commands, data directory structure, and configuration.
+| <<programming-model,Programming model>> | Query syntax, normalization, and explain output.
+| <<verification,Verification>> | Reference oracle, correctness properties, and test commands.
+| <<implementation,Implementation>> | Segment layout, publication protocol, and integrity checks.
+| <<performance,Performance>> | Ranking formulas, compression, and benchmarks.
+| <<limitations,Known limitations>> | Implemented behavior and current boundaries.
+|===
+
+[#documentation-conventions]
+=== Conventions
+
+* `monospace` identifies commands, paths, and code identifiers.
+* Paths are relative to the repository root unless stated otherwise.
+* Unmeasured results are marked `TBD (unmeasured)`.
+* The normative storage specification and design decisions are maintained in `docs/index-format.md` and `docs/adr/`.
+
+The https://github.com/tmarhguy/sealion[repository] contains the source and supporting documents. Use the chapter sidebar to navigate this manual, or press kbd:[Ctrl+K] / kbd:[⌘+K] to search.
 
 // Chapters — reorder freely. Filenames carry a numeric prefix only so
 // directory listings stay in reading order; the visible numbers come
@@ -78,3 +95,7 @@ include::sections/07-implementation.adoc[]
 include::sections/08-performance.adoc[]
 
 include::sections/09-limitations.adoc[]
+
+include::sections/10-about.adoc[]
+
+include::sections/11-template.adoc[]

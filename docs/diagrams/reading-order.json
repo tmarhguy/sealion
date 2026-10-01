@@ -1,0 +1,22 @@
+{
+  "title": "Reading order",
+  "subtitle": "How to enter this manual",
+  "rows": [
+    [
+      "Context",
+      "Chapters 1-2: what the system is and how it fits together."
+    ],
+    [
+      "Working model",
+      "Chapters 3-5: structures, interfaces, and query language."
+    ],
+    [
+      "Evidence",
+      "Chapters 6-8: proof the system behaves as claimed."
+    ],
+    [
+      "Deep dive",
+      "Enter any chapter from the sidebar after the Architecture overview."
+    ]
+  ]
+}

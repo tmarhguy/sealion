@@ -90,6 +90,9 @@ sealion-data/
 }
 ----
 
+.Data directory
+image::data-dir.svg[Data directory: manifest, then immutable segments, then ignored temp files, then visibility rule,width=800,link=images/data-dir.svg]
+
 NOTE: A document is searchable if and only if its segment is listed in
 `manifest.json`. Orphan temp files from a crashed publication are ignored.
 

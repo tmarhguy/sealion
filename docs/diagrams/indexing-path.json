@@ -1,0 +1,30 @@
+{
+  "title": "Indexing path",
+  "subtitle": "Batch ingestion and publication of immutable segments",
+  "rows": [
+    [
+      "Corpus files",
+      "Read .txt and .md documents."
+    ],
+    [
+      "Collect",
+      "Assign stable document IDs."
+    ],
+    [
+      "Analyze",
+      "Tokenize, normalize case, handle stop words, and stem."
+    ],
+    [
+      "MemIndex",
+      "Accumulate fielded positional postings."
+    ],
+    [
+      "Segment writer",
+      "Encode delta-varint postings and calculate per-term CRCs."
+    ],
+    [
+      "Publish",
+      "Store immutable .seal segments; publish the generation in manifest.json."
+    ]
+  ]
+}

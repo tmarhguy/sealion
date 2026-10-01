@@ -1,141 +1,16 @@
-/* Tiny offline search for the static manual. No dependencies, no backend.
- * Indexes section headings + the first paragraph of each section at load,
- * filters the sidebar TOC live, and shows up to 12 jump-to results.
- * Without JS no search box is injected, so the page degrades gracefully.
- *
- * This searches the *documentation*. Searching a live dataset with the
- * project's own engine (HTTP API + product UI) is a separate workstream
- * documented in the manual itself.
- */
-(function () {
+/* Full manual search. Everything stays in the browser; no network or index files. */
+(() => {
   'use strict';
-
-  var MAX_RESULTS = 12;
-
-  function sectionText(heading) {
-    // First meaningful paragraph after the heading's section container.
-    var node = heading.parentElement;
-    var depth = 0;
-    while (node && node !== document.body && depth < 4) {
-      var p = node.querySelector(':scope .paragraph p, :scope p');
-      if (p && p.textContent.trim()) return p.textContent.trim().slice(0, 160);
-      node = node.nextElementSibling;
-      depth += 1;
-    }
-    return '';
-  }
-
-  function init() {
-    var toc = document.getElementById('toc');
-    if (!toc) return;
-    var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
-    if (!links.length) return;
-
-    // Build the box (JS-only so no-JS pages show no dead input).
-    var box = document.createElement('div');
-    box.className = 'docs-search';
-    var input = document.createElement('input');
-    input.type = 'search';
-    input.placeholder = 'Search this manual… ( / )';
-    input.setAttribute('aria-label', 'Search this manual (shortcut: /)');
-    input.autocomplete = 'off';
-    box.appendChild(input);
-    var results = document.createElement('ul');
-    results.className = 'docs-search-results';
-    results.hidden = true;
-    box.appendChild(results);
-    var controls = toc.querySelector('.nav-controls');
-    if (controls) controls.after(box);
-    else toc.prepend(box);
-
-    // Index: TOC link text + target heading + snippet.
-    var index = links.map(function (a) {
-      var href = a.getAttribute('href');
-      var target = document.querySelector(href);
-      var title = a.textContent.trim();
-      var snippet = target ? sectionText(target) : '';
-      return {
-        a: a, href: href, title: title,
-        hay: (title + ' ' + snippet).toLowerCase(), snippet: snippet
-      };
-    });
-
-    function clearFilter() {
-      toc.classList.remove('toc-searching');
-      index.forEach(function (e) {
-        var li = e.a.closest('li');
-        if (li) li.classList.remove('toc-no-match', 'toc-match');
-      });
-    }
-
-    input.addEventListener('input', function () {
-      var q = input.value.trim().toLowerCase();
-      results.innerHTML = '';
-      if (!q) {
-        results.hidden = true;
-        clearFilter();
-        return;
-      }
-      var hits = index.filter(function (e) { return e.hay.indexOf(q) !== -1; });
-      toc.classList.add('toc-searching');
-      index.forEach(function (e) {
-        var li = e.a.closest('li');
-        if (!li) return;
-        var match = e.hay.indexOf(q) !== -1;
-        li.classList.toggle('toc-no-match', !match);
-        li.classList.toggle('toc-match', match);
-        // Reveal matches hidden inside collapsed parents.
-        if (match) {
-          var p = li.parentElement;
-          while (p && p !== toc) {
-            var pli = p.closest('li');
-            if (pli) pli.classList.remove('toc-no-match');
-            p = pli ? pli.parentElement : null;
-          }
-        }
-      });
-      if (!hits.length) {
-        var empty = document.createElement('div');
-        empty.className = 'docs-search-empty';
-        empty.textContent = 'No matches in this manual.';
-        results.appendChild(empty);
-      } else {
-        hits.slice(0, MAX_RESULTS).forEach(function (h) {
-          var li = document.createElement('li');
-          var a = document.createElement('a');
-          a.href = h.href;
-          a.textContent = h.title;
-          if (h.snippet) a.title = h.snippet;
-          li.appendChild(a);
-          results.appendChild(li);
-        });
-      }
-      results.hidden = false;
-    });
-
-    // Esc clears the search.
-    input.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape') {
-        input.value = '';
-        input.dispatchEvent(new Event('input'));
-        input.blur();
-      }
-    });
-
-    // Docs-site shortcut (RISC-V/Antora style): "/" focuses search.
-    // Ignored while typing in any field or with a modifier held.
-    document.addEventListener('keydown', function (ev) {
-      if (ev.key !== '/' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
-      var t = ev.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      ev.preventDefault();
-      input.focus();
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  const trigger=document.getElementById('search-trigger');if(!trigger)return;
+  const headings=[...document.querySelectorAll('#content h2[id],#content h3[id],#content h4[id]')];
+  const index=headings.map(h=>{const parts=[];let n=h.nextElementSibling;if(n?.classList.contains('sectionbody'))n=n.firstElementChild;while(n&&!/^H[234]$/.test(n.tagName)&&!n.classList.contains('sect2')&&!n.classList.contains('sect3')){const fragment=n.cloneNode(true);fragment.querySelectorAll('button,.code-language').forEach(el=>el.remove());parts.push(fragment.textContent.trim());n=n.nextElementSibling;}const text=parts.join(' ').replace(/\s+/g,' ');return{id:h.id,title:h.textContent.trim(),text,hay:(h.textContent+' '+text).toLowerCase()};});
+  const dialog=document.createElement('dialog');dialog.setAttribute('aria-label','Search documentation');
+  dialog.innerHTML='<div class="search-header"><input type="search" placeholder="Search documentation…" aria-label="Search the entire manual" autocomplete="off"><button type="button" aria-label="Close search">Esc</button></div><ul class="search-results"></ul><div class="search-status" role="status" aria-live="polite"></div>';
+  document.body.append(dialog);const input=dialog.querySelector('input'),results=dialog.querySelector('ul'),status=dialog.querySelector('.search-status');
+  function render(){results.replaceChildren();const q=input.value.trim().toLowerCase();if(!q){const li=document.createElement('li');li.className='search-hint';li.textContent='Find a concept, command, or implementation detail. Try “BM25”, “manifest”, or “cargo”.';results.append(li);status.textContent='Search across all chapters · Esc to close';return;}const words=q.split(/\s+/);const hits=index.filter(x=>words.every(w=>x.hay.includes(w))).sort((a,b)=>Number(b.title.toLowerCase().includes(q))-Number(a.title.toLowerCase().includes(q)));hits.slice(0,20).forEach(hit=>{const li=document.createElement('li'),a=document.createElement('a'),small=document.createElement('small');a.href='#'+hit.id;a.append(document.createTextNode(hit.title));const at=hit.text.toLowerCase().indexOf(words[0]);const start=Math.max(0,at-50);small.textContent=(start?'…':'')+hit.text.slice(start,start+165)+(hit.text.length>start+165?'…':'');a.append(small);a.onclick=()=>dialog.close();li.append(a);results.append(li);});status.textContent=hits.length?`${hits.length} results${hits.length>20?' · showing first 20':''} · Tab or ↓ to explore`:'No results. Try a shorter or different search.';}
+  function open(){dialog.showModal();render();input.focus();input.select();}
+  trigger.onclick=open;dialog.querySelector('button').onclick=()=>dialog.close();dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+  dialog.addEventListener('close',()=>trigger.focus());input.addEventListener('input',render);
+  dialog.addEventListener('keydown',e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const links=[...results.querySelectorAll('a')];if(!links.length)return;e.preventDefault();const current=links.indexOf(document.activeElement);const next=e.key==='ArrowDown'?(current+1)%links.length:(current<=0?links.length-1:current-1);links[next].focus();});
+  document.addEventListener('keydown',e=>{const typing=e.target.matches('input,textarea,select')||e.target.isContentEditable;if((e.key.toLowerCase()==='k'&&(e.metaKey||e.ctrlKey))||(e.key==='/'&&!typing&&!e.metaKey&&!e.ctrlKey&&!e.altKey)){e.preventDefault();if(!dialog.open)open();}});
 })();

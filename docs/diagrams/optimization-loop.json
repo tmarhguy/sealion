@@ -1,0 +1,26 @@
+{
+  "title": "Optimization loop",
+  "subtitle": "Every change follows measure, implement, document",
+  "rows": [
+    [
+      "Profile",
+      "Measure before changing anything."
+    ],
+    [
+      "Hypothesize",
+      "State the expected improvement."
+    ],
+    [
+      "Implement",
+      "Change the code."
+    ],
+    [
+      "Benchmark",
+      "Run the codec, query, and scaling harnesses."
+    ],
+    [
+      "Document",
+      "Record measured behavior; unmeasured stays TBD."
+    ]
+  ]
+}

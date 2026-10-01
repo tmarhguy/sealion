@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="548" viewBox="0 0 800 548" role="img" aria-labelledby="title desc">
+<title id="title">Optimization loop</title><desc id="desc">Profile: Measure before changing anything.; Hypothesize: State the expected improvement.; Implement: Change the code.; Benchmark: Run the codec, query, and scaling harnesses.; Document: Record measured behavior; unmeasured stays TBD.</desc>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:var(--diagram-ink,#202020)}.detail{font-size:14px;fill:var(--diagram-muted,#595959)}.label{font-size:16px;font-weight:600}.num{font-family:monospace;font-size:12px;fill:var(--diagram-number,#757575)}</style>
+<rect x=".5" y=".5" width="799" height="547" rx="10" fill="var(--diagram-paper,#fff)" stroke="var(--diagram-line,#dedede)"/>
+<text x="28" y="35" class="label">Optimization loop</text>
+<text x="28" y="58" class="detail">Every change follows measure, implement, document</text>
+<rect x="28" y="78" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="107" class="num">01</text>
+<text x="80" y="107" class="label">Profile</text>
+<text x="80" y="129" class="detail">Measure before changing anything.</text>
+<path d="M 57 150 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="166" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="195" class="num">02</text>
+<text x="80" y="195" class="label">Hypothesize</text>
+<text x="80" y="217" class="detail">State the expected improvement.</text>
+<path d="M 57 238 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="254" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="283" class="num">03</text>
+<text x="80" y="283" class="label">Implement</text>
+<text x="80" y="305" class="detail">Change the code.</text>
+<path d="M 57 326 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="342" width="744" height="72" rx="6" fill="var(--diagram-row,#fafafa)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="371" class="num">04</text>
+<text x="80" y="371" class="label">Benchmark</text>
+<text x="80" y="393" class="detail">Run the codec, query, and scaling harnesses.</text>
+<path d="M 57 414 v 13 m -3 -4 l 3 4 l 3 -4" fill="none" stroke="var(--diagram-number,#999)"/>
+<rect x="28" y="430" width="744" height="72" rx="6" fill="var(--diagram-edge,#f4f4f4)" stroke="var(--diagram-line,#dedede)"/>
+<text x="44" y="459" class="num">05</text>
+<text x="80" y="459" class="label">Document</text>
+<text x="80" y="481" class="detail">Record measured behavior; unmeasured stays TBD.</text>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "layout": "banner",
+  "title": "From query to ranked results",
+  "subtitle": "A query is analyzed, matched to immutable index segments, and ranked using BM25.",
+  "rows": [
+    [
+      "Query",
+      "Parse and normalize the search text",
+      "\"distributed systems\"",
+      "terms + query constraints"
+    ],
+    [
+      "Index",
+      "Read fielded, positional postings",
+      "immutable .seal segments",
+      "manifest.json"
+    ],
+    [
+      "Results",
+      "Rank matches and extract snippets",
+      "BM25 score + document ID",
+      "title, URL, snippet"
+    ]
+  ]
+}

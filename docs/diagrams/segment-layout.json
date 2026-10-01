@@ -1,0 +1,36 @@
+{
+  "title": "Segment file layout",
+  "subtitle": "Physical order in a .seal file \u00b7 diagram is not to scale",
+  "rows": [
+    [
+      "Header",
+      "SEALION1 magic, version, flags, counts, offsets, and header CRC",
+      "60 bytes"
+    ],
+    [
+      "Postings + positions",
+      "Delta-varint document IDs, gapped positions, and per-term CRCs",
+      "Variable"
+    ],
+    [
+      "Dictionary",
+      "Count and entries sorted by (field, term); offsets, df, bounds, and CRCs",
+      "Variable"
+    ],
+    [
+      "Document metadata",
+      "Document ID and stored JSON document",
+      "Variable"
+    ],
+    [
+      "Statistics",
+      "Per-field token totals used to calculate BM25 average document length",
+      "Variable"
+    ],
+    [
+      "Footer",
+      "Magic and whole-file CRC32",
+      "16 bytes"
+    ]
+  ]
+}

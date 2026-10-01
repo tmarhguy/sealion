@@ -12,6 +12,10 @@ use sealion_index::segment::manifest::Manifest;
 use sealion_index::segment::reader::SegmentReader;
 use sealion_index::segment::writer::write_segment;
 
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static TMP_CTR: AtomicU64 = AtomicU64::new(0);
+
 struct Rng(u64);
 
 impl Rng {
@@ -41,7 +45,15 @@ fn doc(id: u64, body: &str) -> Document {
 }
 
 fn tmpdir(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("sealion-adv-{name}-{}", std::process::id()));
+    // Unique per call: tests in this binary run in parallel threads of one
+    // process, so pid alone collides (two tests share sample_segment(), and
+    // one deletes the dir while the other still uses it).
+    let n = TMP_CTR.fetch_add(1, Ordering::SeqCst);
+    let dir = std::env::temp_dir().join(format!(
+        "sealion-adv-{name}-{}-{:?}-{n}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir

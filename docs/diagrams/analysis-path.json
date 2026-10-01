@@ -1,0 +1,30 @@
+{
+  "title": "Text analysis",
+  "subtitle": "Shared by document indexing and query normalization",
+  "rows": [
+    [
+      "Raw text",
+      "Read the text of an individual field."
+    ],
+    [
+      "Tokenize",
+      "Split using Unicode-alphanumeric boundaries."
+    ],
+    [
+      "Case folding",
+      "Normalize character case."
+    ],
+    [
+      "Stop words",
+      "Remove configured stop words while preserving position gaps."
+    ],
+    [
+      "Porter stemming",
+      "Apply stemming when enabled for the field."
+    ],
+    [
+      "Terms + positions",
+      "Emit normalized tokens and their positions."
+    ]
+  ]
+}

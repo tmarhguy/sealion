@@ -1,0 +1,21 @@
+[#about]
+[preface]
+== About me
+
+I'm Tyrone Marhguy, a Computer Engineering student at the University of Pennsylvania. I work on processors, hardware, and the software that runs on them. SeaLion is my Rust search-engine project.
+
+=== Hardware projects
+
+My https://www.tmarhguy.com/projects/#hardware-projects-title[hardware projects] include the Tomato computer, Pineapple GPU, processor designs, and digital circuits.
+
+=== Software and systems
+
+My https://www.tmarhguy.com/projects/#software-projects-title[software projects] include SeaLion, FramePort, Lobster, and FigDB.
+
+=== Open-source contributions
+
+See my https://www.tmarhguy.com/projects/#open-source-title[open-source work] for contributions to LibreLane, OpenROAD, Verilator, and OpenFPGA.
+
+=== More about my work
+
+My https://www.tmarhguy.com/[website] has project details, engineering notes, and background. For issues or changes specific to SeaLion, use the https://github.com/tmarhguy/sealion[project repository].

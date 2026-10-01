@@ -18,15 +18,8 @@ search is latency-sensitive and verified against a reference engine
 
 === Indexing path
 
-[source,text]
-----
-corpus files (.txt/.md today)
-  -> collect (stable DocIds)
-  -> analyzer (tokenizer, case folding, stop words, stemmer)
-  -> MemIndex (fielded positional postings)
-  -> segment writer (delta+varint, per-term CRCs)
-  -> immutable .seal segments + manifest.json
-----
+.Indexing path
+image::indexing-path.svg[Indexing path: corpus files, then collect, then analyze, then memindex, then segment writer, then publish,width=800,link=images/indexing-path.svg]
 
 Key properties:
 
@@ -37,14 +30,8 @@ Key properties:
 
 === Search path
 
-[source,text]
-----
-sealion search 'query'
-  -> parse + normalize (same analysis as indexing)
-  -> Boolean execution / ranked retrieval
-  -> snippets + per-term explanation
-  -> ranked hits (score, title, url, snippet)
-----
+.Search path
+image::search-path.svg[Search path: query, then parse + normalize, then execute + rank, then explain + extract, then results,width=800,link=images/search-path.svg]
 
 Ranking is exhaustive field-weighted BM25 over the live set
 (see <<performance,Performance>>).

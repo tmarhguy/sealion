@@ -5,6 +5,9 @@ Measured behaviour only. Unmeasured values are `TBD (unmeasured)`.
 Every optimization follows profile → hypothesize → implement →
 benchmark → document.
 
+.Optimization loop
+image::optimization-loop.svg[Optimization loop: profile, then hypothesize, then implement, then benchmark, then document,width=800,link=images/optimization-loop.svg]
+
 === Ranking model
 
 Primary lexical score is field-weighted BM25 with positive IDF:
@@ -55,6 +58,9 @@ layout exists for benchmark comparison only.
 
 Report bytes/posting, decode throughput, and query-latency effect
 together — size alone never justifies a codec change.
+
+.Compression path
+image::compression-path.svg[Compression: sorted DocIDs, then deltas, then variable-byte, then positions, then raw baseline,width=800,link=images/compression-path.svg]
 
 === Benchmarks
 

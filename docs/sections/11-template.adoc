@@ -1,0 +1,49 @@
+[#template]
+[preface]
+== Use this documentation template
+
+This manual uses a reusable AsciiDoc template with plain CSS and JavaScript. Its build tools use Python's standard library and Asciidoctor. There is no Node dependency directory or frontend framework.
+
+link:downloads/docs-template.zip[Download the repository-ready template]. The archive includes the theme, starter content, build tools, checks, GitHub Actions workflow, and an MIT license for the template. SeaLion content and the author's biography are replaced with generic examples.
+
+=== Configure a project
+
+. Extract the archive into a new directory.
+. Edit `docs/site.json` with your project name, description, source repository, and an optional custom documentation URL. A GitHub repository automatically resolves to its `OWNER.github.io/REPOSITORY/` address.
+. Set `website` to a live application or project website, or leave it empty to omit the button.
+. Replace the starter chapters and About page with your own content.
+. Run `make docs-check`, then `make docs-open`.
+
+=== Publish with GitHub Pages
+
+Create a repository containing the extracted files. In *Settings → Pages*, select *GitHub Actions* as the build source. The included workflow checks the documentation before publishing changes from `main`. Change the branch name if your repository uses another default.
+
+To let others copy your new repository, enable *Template repository* in its general settings. GitHub then provides a *Use this template* button.
+
+=== Overview image
+
+The homepage always shows a hero visual when a conventional file exists: `docs/images/overview-hero.svg`, `hero.svg`, `overview-hero.png`, `hero.png`, `overview-hero.gif`, `hero.gif`, `demo.gif`, or the JPG/WebP equivalents. Drop in a diagram, screenshot, photo, or demo GIF and it appears automatically with no configuration. Diagrams render full-width; photos, screenshots, and GIFs render centered at 60% and expand full-size when clicked.
+
+Set `hero` in `docs/site.json` to override the image path, alternative text, and an optional caption. Leave it `null` with no image file for a text-only introduction. The starter includes a placeholder marker, not a mandatory image.
+
+For a compact overview diagram, copy `docs/theme/hero.example.json` into `docs/diagrams/overview-hero.json`, adapt its labels, and generate the SVG. Diagrams follow the selected theme; photos keep their original colors.
+
+=== Figures, code, and callouts
+
+Edit diagram definitions in `docs/diagrams/` and run `make docs-diagrams` to generate lightweight SVGs. Start from `docs/theme/flow.example.json` for vertical step flows or `docs/theme/hero.example.json` for three-column banners. Generated diagrams inherit the selected theme, and retain accessible titles and descriptions.
+
+Source blocks have language labels, copy and wrap controls, and lightweight highlighting. Code stays selectable and the copied text contains no formatting markup.
+
+Callout labels use semantic color. The callout backgrounds and the rest of the interface remain neutral.
+
+=== Social previews
+
+The build places Open Graph and Twitter metadata in the static HTML, where link-preview crawlers can read it without running JavaScript. Set the public URL and description in `docs/site.json`. An optional `image` path points to a committed 1200 × 630 PNG.
+
+The optional `scripts/render-docs-social.py` tool generates that PNG from the same project configuration using Pillow. Pillow is needed only when regenerating the image, not for normal builds. Recreate the image after changing the project title or description.
+
+NOTE: Chapter addresses use hash fragments in one HTML document, so they share the project's social preview. GitHub repository previews are configured separately in repository settings.
+
+=== Validation
+
+`make docs-check` validates links, assets, diagram output, required pages, social metadata, and the starter build. It also verifies that broken-link and missing-asset fixtures fail. CI checks JavaScript syntax using the hosted runner's Node installation, without an npm install.

@@ -1,0 +1,22 @@
+{
+  "title": "Data directory",
+  "subtitle": "One mutable manifest over immutable segments",
+  "rows": [
+    [
+      "manifest.json",
+      "The sole mutable file: generation, segments, and deleted IDs."
+    ],
+    [
+      "Immutable segments",
+      "Published .seal files never change."
+    ],
+    [
+      "Temp files",
+      "Crash orphans from unfinished publications are ignored."
+    ],
+    [
+      "Visibility rule",
+      "A document is searchable iff its segment is listed in the manifest."
+    ]
+  ]
+}
