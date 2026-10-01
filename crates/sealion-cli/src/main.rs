@@ -227,6 +227,17 @@ enum BenchOp {
         /// Corpus path to index into a temp segment.
         path: String,
     },
+    /// Distributed scaling + failure benchmark (§91–92).
+    Scale {
+        /// Corpus path to build layouts from.
+        path: String,
+        /// Shard counts to compare (default "1,2,4").
+        #[arg(long, default_value = "1,2,4")]
+        shards: String,
+        /// Benchmark rounds over the query mix.
+        #[arg(long, default_value_t = 2)]
+        rounds: usize,
+    },
 }
 
 #[tokio::main]
@@ -531,6 +542,21 @@ async fn main() -> Result<()> {
             } => local::bench_query(&data_dir, &cfg, rounds, cache, exhaustive),
             BenchOp::Index { path } => {
                 local::bench_index(std::path::Path::new(&path), &cfg.analysis)
+            }
+            BenchOp::Scale {
+                path,
+                shards,
+                rounds,
+            } => {
+                let counts: Vec<usize> = shards
+                    .split(',')
+                    .filter_map(|s| s.trim().parse().ok())
+                    .filter(|n| (1..=16).contains(n))
+                    .collect();
+                if counts.is_empty() {
+                    anyhow::bail!("--shards must list 1–16 (e.g. \"1,2,4,8\")");
+                }
+                local::bench_scale(std::path::Path::new(&path), &cfg, &counts, rounds).await
             }
         },
     }

@@ -972,12 +972,16 @@ pub fn bench_index(corpus: &Path, analysis: &AnalysisConfig) -> Result<()> {
     }
     let postings = index.posting_count();
     let terms = index.term_count();
+    let tokens: u64 = sealion_core::field::Field::ALL
+        .iter()
+        .map(|f| index.field_token_total(*f))
+        .sum();
     let tmp = std::env::temp_dir().join(format!("sealion-bench-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
     let meta = write_segment(&tmp, &index, true).map_err(|e| anyhow::anyhow!("{e}"))?;
     let secs = t0.elapsed().as_secs_f64();
     println!(
-        "bench index: {} docs ({} skipped) in {:.2}s  {:.0} docs/s  {:.1} MB/s  {} terms  {} postings  {} segment bytes ({:.1}% of input)",
+        "bench index: {} docs ({} skipped) in {:.2}s  {:.0} docs/s  {:.1} MB/s  {} terms  {} postings  {:.0} tokens/s  {} segment bytes ({:.1}% of input)",
         files.len(),
         skipped,
         secs,
@@ -985,11 +989,214 @@ pub fn bench_index(corpus: &Path, analysis: &AnalysisConfig) -> Result<()> {
         bytes_in as f64 / 1e6 / secs.max(1e-9),
         terms,
         postings,
+        tokens as f64 / secs.max(1e-9),
         meta.bytes,
         100.0 * meta.bytes as f64 / bytes_in.max(1) as f64
     );
     let _ = std::fs::remove_dir_all(&tmp);
     Ok(())
+}
+
+/// Distributed scaling + failure benchmark (§91–92).
+///
+/// For each shard count: build the layout in a temp dir (timed indexing),
+/// then run the query battery (single-node path for N=1, coordinator
+/// fan-out otherwise). Afterwards, on a 4-shard ×2-replica layout:
+/// single-copy loss (failover cost, still complete), full-shard loss
+/// (partial + coverage), and a live shard move (results unchanged).
+pub async fn bench_scale(
+    corpus: &Path,
+    cfg: &sealion_core::config::Config,
+    shards: &[usize],
+    rounds: usize,
+) -> Result<()> {
+    use sealion_distributed::replica::Router;
+    use sealion_distributed::shard::{shard_copy_dir, Topology};
+
+    let queries: Vec<String> = sealion_bench::query_mix()
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    let rounds = rounds.clamp(1, 10);
+    println!(
+        "scale: {} queries × {} rounds | corpus {}",
+        queries.len(),
+        rounds,
+        corpus.display()
+    );
+    println!("shards | index docs/s | qps | p50 ms | p99 ms | partial");
+
+    let mut scale_dirs = Vec::new();
+    for &n in shards {
+        let dir = std::env::temp_dir().join(format!("sealion-scale-{n}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let t0 = std::time::Instant::now();
+        if n <= 1 {
+            index_corpus(corpus, &dir, &cfg.analysis)?;
+        } else {
+            cluster_init(&dir, n, 1)?;
+            index_corpus_clustered(corpus, &dir, &cfg.analysis)?;
+        }
+        let index_secs = t0.elapsed().as_secs_f64();
+        // Count docs for the docs/s figure.
+        let docs = count_docs(&dir)?;
+        let docs_per_sec = docs as f64 / index_secs.max(1e-9);
+
+        // Search battery.
+        let mut samples = Vec::new();
+        let mut partial_seen = false;
+        for _ in 0..rounds {
+            for raw in &queries {
+                let query =
+                    sealion_query::parser::parse(&cfg.analysis, cfg.query.max_query_terms, raw)
+                        .unwrap_or(sealion_query::query::Query::MatchNothing);
+                if n <= 1 {
+                    let gen = load_generation(&dir)?;
+                    let view = MultiSegmentView::new(&gen.readers, &gen.tombstones);
+                    let t = std::time::Instant::now();
+                    let _ = sealion_query::wand::block_max_wand_search(
+                        &view,
+                        &cfg.analysis,
+                        &cfg.ranking,
+                        &query,
+                        cfg.query.top_k,
+                    );
+                    samples.push(t.elapsed().as_secs_f64() * 1000.0);
+                } else {
+                    let topo = Topology::load(&dir).map_err(|e| anyhow::anyhow!("{e}"))?;
+                    let mut router = Router::default();
+                    let res = sealion_distributed::distributed_search(
+                        &dir,
+                        &topo,
+                        &mut router,
+                        &cfg.analysis,
+                        &cfg.ranking,
+                        &query,
+                        cfg.query.top_k,
+                    )
+                    .await;
+                    partial_seen |= res.partial;
+                    samples.push(res.took_ms);
+                }
+            }
+        }
+        let lat = sealion_bench::Latency::from_ms(samples);
+        let total_s: f64 = (lat.mean_ms * lat.runs as f64) / 1000.0;
+        println!(
+            "{n:>6} | {docs_per_sec:>11.0} | {:>3.0} | {:>6.2} | {:>6.2} | {partial_seen}",
+            lat.runs as f64 / total_s.max(1e-9),
+            lat.p50_ms,
+            lat.p99_ms,
+        );
+        scale_dirs.push(dir);
+    }
+
+    // Failure benchmark (§92) on a dedicated 4-shard ×2 layout.
+    let fdir = std::env::temp_dir().join(format!("sealion-scale-fail-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&fdir);
+    cluster_init(&fdir, 4, 2)?;
+    index_corpus_clustered(corpus, &fdir, &cfg.analysis)?;
+    let probe = "compiler";
+    let query = sealion_query::parser::parse(&cfg.analysis, cfg.query.max_query_terms, probe)
+        .unwrap_or(sealion_query::query::Query::MatchNothing);
+
+    async fn probe_search(
+        dir: &std::path::Path,
+        cfg: &sealion_core::config::Config,
+        query: &sealion_query::query::Query,
+    ) -> (f64, bool, Vec<u64>) {
+        let topo = Topology::load(dir).expect("topology");
+        let mut router = Router::default();
+        let res = sealion_distributed::distributed_search(
+            dir,
+            &topo,
+            &mut router,
+            &cfg.analysis,
+            &cfg.ranking,
+            query,
+            cfg.query.top_k,
+        )
+        .await;
+        (
+            res.took_ms,
+            res.partial,
+            res.hits.iter().map(|h| h.doc.0).collect(),
+        )
+    }
+
+    let (base_ms, base_partial, base_hits) = probe_search(&fdir, cfg, &query).await;
+    println!(
+        "failover baseline: {base_ms:.2}ms partial={base_partial} hits={}",
+        base_hits.len()
+    );
+
+    // Kill ONE copy of shard 0: traffic must shift, results complete.
+    let victim = shard_copy_dir(&fdir, "node-0", 0);
+    let victim_exists = victim.exists();
+    if victim_exists {
+        std::fs::remove_dir_all(&victim).ok();
+    }
+    let (ms, partial, hits) = probe_search(&fdir, cfg, &query).await;
+    println!(
+        "failover 1 copy lost: {ms:.2}ms partial={partial} hits={} (complete={})",
+        hits.len(),
+        !partial && hits == base_hits
+    );
+
+    // Kill ALL copies of shard 1: partial, survivors served.
+    for node in ["node-0", "node-1"] {
+        std::fs::remove_dir_all(shard_copy_dir(&fdir, node, 1)).ok();
+    }
+    let (ms, partial, hits) = probe_search(&fdir, cfg, &query).await;
+    println!(
+        "failover shard lost: {ms:.2}ms partial={partial} hits={}",
+        hits.len()
+    );
+
+    // Restore shard 1 by reindexing, then move shard 2 live.
+    index_corpus_clustered(corpus, &fdir, &cfg.analysis)?;
+    let (_, _, pre_move) = probe_search(&fdir, cfg, &query).await;
+    cluster_move(&fdir, 2, "node-9", None)?;
+    let (ms, partial, post_move) = probe_search(&fdir, cfg, &query).await;
+    println!(
+        "migration move shard 02: {ms:.2}ms partial={partial} identical={}",
+        pre_move == post_move
+    );
+
+    for dir in scale_dirs {
+        let _ = std::fs::remove_dir_all(dir);
+    }
+    let _ = std::fs::remove_dir_all(fdir);
+    Ok(())
+}
+
+/// Live document count across single or cluster layouts (for docs/s).
+fn count_docs(data_dir: &Path) -> Result<usize> {
+    if is_cluster(data_dir) {
+        use sealion_distributed::shard::{shard_copy_dir, Topology};
+        let topo = Topology::load(data_dir).map_err(|e| anyhow::anyhow!("{e}"))?;
+        let mut total = 0;
+        for s in 0..topo.shard_count {
+            // First servable copy only: replicas hold identical doc sets.
+            if let Some(c) = topo.healthy_copies(s).into_iter().next() {
+                let dir = shard_copy_dir(data_dir, &c.node, s);
+                if let Ok(manifest) = Manifest::load_or_new(&dir) {
+                    for name in &manifest.segments {
+                        if let Ok(r) = SegmentReader::open(&dir.join(name)) {
+                            total += r.len();
+                        }
+                    }
+                }
+            }
+        }
+        Ok(total)
+    } else {
+        Ok(load_generation(data_dir)?
+            .readers
+            .iter()
+            .map(|r| r.len())
+            .sum())
+    }
 }
 
 /// Run the relevance harness (§51–53) over `<eval_dir>/{corpus,queries,judgments}`.
