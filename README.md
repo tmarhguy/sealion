@@ -9,10 +9,12 @@ Every inverted-index structure and retrieval algorithm is implemented here.
 
 ## Status
 
-**Under construction.** Milestone 01 of 20 (bootstrap) is complete.
-Working search arrives at milestone 03; v1.0 at milestone 20.
-Unbuilt features are marked honestly as *not yet implemented* — numbers that
-haven't been measured are marked *TBD (unmeasured)*.
+**Under construction.** Milestones 01–03 of 20 are complete: the engine
+builds, analyzes text, and runs Boolean search over an in-memory index
+(verified against the reference oracle). Persistent segments, ranking, and
+the CLI search path are roadmap — unbuilt features are marked honestly as
+*not yet implemented*, numbers that haven't been measured are *TBD
+(unmeasured)*.
 
 ## Quick start (as milestones land)
 

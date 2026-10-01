@@ -6,9 +6,44 @@ milestone adds.
 
 ## Current state
 
-**Milestone 01 — bootstrap.** Rust workspace, `sealion` CLI skeleton with
-stubbed subcommands, document model (`sealion-core`), validated TOML config,
-CI (fmt/clippy/test). No indexing or search yet.
+**Milestones 01–03 — bootstrap, analysis, in-memory search.**
+
+- 01: Rust workspace, `sealion` CLI skeleton with stubbed subcommands,
+  document model (`sealion-core`), validated TOML config, CI
+  (fmt/clippy/test). Plus bootstrap correctness fixes: quoted TOML strings
+  accepted for `stemmer`, unimplemented `sealion-eval` modules stubbed so
+  the workspace builds.
+- 02: text analysis pipeline (`sealion-index::analysis`, `::stemmer`):
+  Unicode-alphanumeric tokenizer, case normalization, English stop words,
+  hand-implemented Porter stemmer (validated against Porter's published
+  vocabulary), per-field config overrides, gapped positional terms.
+  See `docs/adr/002-analysis.md`.
+- 03: SeaLion searches. In-memory fielded positional inverted index
+  (`sealion-index::mem_index`), Boolean query AST over normalized terms
+  with raw-text constructors (`sealion-query::query`), indexed execution
+  (`sealion-query::execute`), and the mandatory reference oracle
+  (`sealion-query::reference`) with index/reference agreement tests
+  (unit + integration + deterministic fuzz). See
+  `docs/adr/003-inmemory-index-reference.md`.
+
+Not yet: persistent segments (04), compression (05), incremental
+updates/merging (06), ranking (07), query parser/planner (08), WAND (09),
+typos/autocomplete (10), crawler (11), eval metrics (12), distribution
+(13–15), product (19–20). The CLI `search`/`index` subcommands stay
+stubbed until persistent indexes land.
+
+## Local build note (macOS)
+
+Some machines have a CommandLineTools/Xcode SDK too new for the installed
+linker (`arm64e.x1-macos` errors in `libSystem.tbd`). If `cargo build`
+fails at link time, build with an older SDK, e.g.:
+
+```bash
+export SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk
+cargo build --workspace
+```
+
+This is environment-specific; CI (ubuntu-latest) is unaffected.
 
 ## Design overview
 
