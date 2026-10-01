@@ -26,8 +26,6 @@ In-repo deterministic fuzz (LCG, fixed seeds): query parser (2000
 garbage inputs — total, bounded leaves), Levenshtein metric laws,
 BK-tree agreement, delta-codec garbage, garbage/truncated segments,
 per-region single-byte mutations, garbage manifests, garbage HTML.
-Nightly `cargo-fuzz` harnesses (libFuzzer) for the parser, segment
-reader, and HTML extractor are the documented next step, not yet wired.
 
 ## 3. Relevance gate (§53, §108)
 
