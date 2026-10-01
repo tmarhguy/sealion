@@ -1,4 +1,4 @@
-//! Boolean execution over the in-memory index (spec §33, subset).
+//! Boolean execution over any index generation (spec §33, subset).
 //!
 //! Set operations run on DocId-sorted posting lists with linear
 //! two-pointer intersection and union. Galloping search and skip-assisted
@@ -6,17 +6,28 @@
 //! semantics defined here (sorted, deduplicated DocId sets) stay fixed.
 
 use sealion_core::document::DocId;
+use sealion_core::error::Result;
 use sealion_core::field::Field;
 use sealion_index::mem_index::MemIndex;
+use sealion_index::view::IndexView;
 
 use crate::query::Query;
 
 /// Execute a Boolean query against the index. Returns sorted DocIds.
 pub fn search(index: &MemIndex, query: &Query) -> Vec<DocId> {
+    search_view(index, query).expect("in-memory postings never fail")
+}
+
+/// Execute a Boolean query against any index generation (in-memory or
+/// persistent segment). Returns sorted DocIds.
+pub fn search_view<V: IndexView>(view: &V, query: &Query) -> Result<Vec<DocId>> {
     match query {
-        Query::Term { field, term } => term_docs(index, *field, term),
+        Query::Term { field, term } => term_docs(view, *field, term),
         Query::And(children) => {
-            let mut lists: Vec<Vec<DocId>> = children.iter().map(|q| search(index, q)).collect();
+            let mut lists: Vec<Vec<DocId>> = Vec::with_capacity(children.len());
+            for q in children {
+                lists.push(search_view(view, q)?);
+            }
             // Cheapest first: intersect smallest lists first.
             lists.sort_by_key(Vec::len);
             let mut acc = lists.first().cloned().unwrap_or_default();
@@ -26,31 +37,33 @@ pub fn search(index: &MemIndex, query: &Query) -> Vec<DocId> {
                     break;
                 }
             }
-            acc
+            Ok(acc)
         }
         Query::Or(children) => {
             let mut acc = Vec::new();
             for q in children {
-                acc = union_sorted(&acc, &search(index, q));
+                acc = union_sorted(&acc, &search_view(view, q)?);
             }
-            acc
+            Ok(acc)
         }
-        Query::Not(child) => difference_sorted(&index.all_doc_ids(), &search(index, child)),
-        Query::MatchAll => index.all_doc_ids(),
-        Query::MatchNothing => Vec::new(),
+        Query::Not(child) => {
+            Ok(difference_sorted(&view.all_doc_ids(), &search_view(view, child)?))
+        }
+        Query::MatchAll => Ok(view.all_doc_ids()),
+        Query::MatchNothing => Ok(Vec::new()),
     }
 }
 
-fn term_docs(index: &MemIndex, field: Option<Field>, term: &str) -> Vec<DocId> {
+fn term_docs<V: IndexView>(view: &V, field: Option<Field>, term: &str) -> Result<Vec<DocId>> {
     match field {
-        Some(f) => index.postings(f, term).iter().map(|p| p.doc).collect(),
+        Some(f) => Ok(view.postings(f, term)?.into_iter().map(|p| p.doc).collect()),
         None => {
             let mut acc = Vec::new();
             for f in Field::ALL {
-                let list: Vec<DocId> = index.postings(f, term).iter().map(|p| p.doc).collect();
+                let list: Vec<DocId> = view.postings(f, term)?.into_iter().map(|p| p.doc).collect();
                 acc = union_sorted(&acc, &list);
             }
-            acc
+            Ok(acc)
         }
     }
 }
