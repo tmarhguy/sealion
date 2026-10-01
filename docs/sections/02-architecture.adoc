@@ -1,0 +1,108 @@
+[#architecture]
+== Architecture
+
+System overview: what the pieces are, how documents flow in,
+how queries flow through, and where each piece lives in the tree.
+
+=== System overview
+
+One index, one ranker, local-first — distribution comes later.
+Solid boxes run today; dashed boxes are roadmap.
+
+.System paths at a glance
+image::system-overview.svg[System indexing and search paths,align=center,width=720]
+
+The two paths are deliberately asymmetric:
+indexing is batch-oriented and crash-safe;
+search is latency-sensitive and verified against a reference engine
+(see <<verification,Verification>>).
+
+=== Indexing path
+
+[source,text]
+----
+corpus files (.txt/.md today)
+  -> collect (stable DocIds)
+  -> analyzer (tokenizer, case folding, stop words, stemmer)
+  -> MemIndex (fielded positional postings)
+  -> segment writer (delta+varint, per-term CRCs)
+  -> immutable .seal segments + manifest.json
+----
+
+Key properties:
+
+* Segments are immutable once published.
+* There is exactly one mutable file: `<data-dir>/manifest.json`.
+* Publication is atomic: temp file, fsync, verify, rename.
+* A crash before the manifest rename leaves the old generation untouched.
+
+=== Search path
+
+[source,text]
+----
+sealion search 'query'
+  -> parse + normalize (same analysis as indexing)
+  -> Boolean execution / ranked retrieval
+  -> snippets + per-term explanation
+  -> ranked hits (score, title, url, snippet)
+----
+
+Ranking is exhaustive field-weighted BM25 over the live set
+(see <<performance,Performance>>).
+Future skipping optimizers must reproduce this ordering exactly
+unless documented as approximate.
+
+=== Crate map
+
+.Crates and their responsibilities
+[cols="1,2,1",options="header"]
+|===
+| Crate | Owns | Stage
+
+| `sealion-core`
+| document model, field taxonomy, config, errors
+| foundation
+
+| `sealion-index`
+| analysis, mem-index, segments, codec, merge, views
+| indexing
+
+| `sealion-query`
+| parser, Boolean execution, reference oracle, ranking, snippets
+| retrieval
+
+| `sealion-crawler`
+| frontier, fetch, HTML extraction (roadmap)
+| ingestion
+
+| `sealion-eval`
+| judgments, metrics (roadmap)
+| evaluation
+
+| `sealion-distributed`
+| sharding, coordinator, replicas (roadmap)
+| scale-out
+
+| `sealion-api`
+| HTTP API (roadmap)
+| product
+
+| `sealion-bench`
+| benchmark harnesses (roadmap)
+| measurement
+
+| `sealion-cli`
+| `sealion` command-line interface
+| interface
+|===
+
+NOTE: Crates named above exist in this tree; several currently contain
+honest stubs that name their milestone.
+The manual never presents a stub as a working subsystem —
+see <<limitations,Known Limitations>>.
+
+=== Further reading
+
+* `docs/architecture.md` — system design and build order
+* `docs/adr/` — records 001–017 behind the choices above
+* <<design,Design>> — data structures behind each box in the figure

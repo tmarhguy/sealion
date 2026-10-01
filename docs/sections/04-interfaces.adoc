@@ -1,0 +1,107 @@
+[#interfaces]
+== Interfaces
+
+How operators and programs touch the system: the CLI,
+the data directory, and the configuration file.
+
+=== Command-line interface
+
+[source,bash]
+----
+# Index a local corpus (.txt/.md; others are counted and skipped)
+sealion index ./evaluation/corpus --data-dir ./sealion-data
+
+# Search: BM25-ranked hits with snippets
+sealion search "distributed systems" --data-dir ./sealion-data
+
+# Phrase + per-term BM25 explanation
+sealion search '"distributed systems"' --explain --data-dir ./sealion-data
+
+# Introspect the index
+sealion index stats  --data-dir ./sealion-data
+sealion index verify --data-dir ./sealion-data
+
+# Incremental updates without a rebuild
+sealion index delete 12345 --data-dir ./sealion-data
+sealion index merge         --data-dir ./sealion-data
+----
+
+.Subcommands
+[cols="1,2",options="header"]
+|===
+| Command | Effect
+
+| `index <corpus>`
+| build segments from local files and publish a new generation
+
+| `search <query>`
+| parse, execute, rank, and render hits with snippets
+
+| `search --explain`
+| additionally print parsed query, normalized terms, and BM25 components
+
+| `index stats`
+| report segment, document, and term counts for the data directory
+
+| `index verify`
+| re-verify checksums and publication invariants, reporting corruption as errors
+
+| `index delete <id>`
+| record a tombstone; the document becomes invisible immediately
+
+| `index merge`
+| consolidate live documents, dropping tombstones and shadowed versions
+|===
+
+Unimplemented surface stays honest:
+
+[source,bash]
+----
+sealion crawl https://example.org
+# sealion: `crawl` is not yet implemented (milestone 11).
+----
+
+=== Data directory
+
+[source,text]
+----
+sealion-data/
+  manifest.json      # sole mutable file: { generation, segments, deleted }
+  seg-000001.seal    # immutable segment
+  seg-000002.seal    # immutable segment
+----
+
+[source,json]
+----
+{
+  "generation": 3,
+  "segments": ["seg-000001.seal", "seg-000002.seal"],
+  "deleted": [12345]
+}
+----
+
+NOTE: A document is searchable if and only if its segment is listed in
+`manifest.json`. Orphan temp files from a crashed publication are ignored.
+
+=== Configuration
+
+Validated TOML; unknown or inconsistent values are rejected at load,
+not silently defaulted.
+
+[source,toml]
+----
+[analysis]
+stop_words = true
+stemmer = "porter"
+
+[analysis.fields.title]
+stemmer = "porter"
+weight = 4.0
+
+[query]
+max_query_terms = 64
+----
+
+CAUTION: Ranking weights live in configuration, but any weight change
+is a ranking change: it requires a relevance regression check
+(see <<verification,Verification>>) before it is accepted.

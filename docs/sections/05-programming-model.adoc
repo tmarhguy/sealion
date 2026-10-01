@@ -1,0 +1,84 @@
+[#programming-model]
+== Programming Model
+
+How to talk to the system: the query language, normalization rules,
+and the explanation output used for debugging ranking.
+
+=== Query syntax
+
+Queries are text plus a small set of operators.
+All terms pass through the same analysis pipeline as indexed text
+(see <<design,Design>>), so `Databases` and `database` agree when
+stemming is enabled.
+
+.Query operators
+[cols="1,2,2",options="header"]
+|===
+| Form | Example | Meaning
+
+| bare terms (implicit AND)
+| `distributed systems`
+| documents containing both terms
+
+| explicit `AND` / `OR` / `NOT` with parens
+| `compiler AND (optimization OR backend) NOT javascript`
+| Boolean combination; precedence `NOT` > `AND` > `OR`
+
+| quoted phrase, bare or fielded
+| `"distributed systems"`, `title:"distributed systems"`
+| positional adjacency required
+
+| field filter
+| `title:compiler`
+| term must occur in the named field
+
+| site filter
+| `site:example.com`
+| document source host must match
+
+| prefix
+| `comp*`
+| vocabulary prefix expansion
+
+| fuzzy
+| `compiler~1`
+| within edit distance 1 of the term
+|===
+
+[source,bash]
+----
+sealion search 'title:compiler AND optimization NOT javascript' --data-dir ./sealion-data
+sealion search '"index merge"~5' --data-dir ./sealion-data
+sealion search 'storag~1' --data-dir ./sealion-data
+----
+
+NOTE: The parser rejects over-complex input with a typed error instead
+of silently truncating. `max_query_terms` bounds prefix and fuzzy
+expansion before execution.
+
+=== Normalization and planning
+
+. Parse raw text into a query AST (`Term`, `Phrase`, `Prefix`,
+`Fuzzy`, `Site`, `And` / `Or` / `Not`).
+. Normalize every term through the index analysis pipeline.
+. Plan evaluation order from document frequency and posting size —
+never blindly left-to-right.
+
+TIP: When a query surprises you, re-run it with `--explain` before
+assuming the index is wrong. Most surprises are normalization
+(case, stop words, stemming) rather than missing postings.
+
+=== Explain output
+
+[source,text]
+----
+query    : "distributed systems"
+parsed   : Phrase(["distribut", "system"])
+doc 17   : tf=2/1 df=3/9 idf=1.62/0.94 len=120 avg=98.4
+           field w: title 4.0, body 1.0 -> contrib 4.31 + 1.02
+total    : 5.33 (score desc, DocId asc)
+----
+
+The breakdown exposes parsed shape, per-term `tf / df / idf`,
+field lengths and averages, field-weight contributions, and the final
+score — the same components defined in <<performance,Performance>>.

@@ -1,0 +1,96 @@
+[#implementation]
+== Implementation
+
+Persistent layout and integrity rules.
+`docs/index-format.md` is normative for the byte layout;
+this chapter summarizes it and states the invariants the code enforces.
+
+=== Segment layout
+
+[source,text]
+----
++-------------------------------+
+| header                  60 B  |  magic SEALION1, version, flags, counts, offsets, CRC
++-------------------------------+
+| postings + positions blocks   |  delta+varint DocIDs + gapped positions, per-term CRCs
++-------------------------------+
+| dictionary  (count + entries) |  sorted by (field, term): offsets, df, bounds, CRCs
++-------------------------------+
+| document metadata (stored)    |  DocID + JSON Document per doc
++-------------------------------+
+| statistics                    |  per-field token totals (BM25 avgdl inputs)
++-------------------------------+
+| footer                  16 B  |  magic + file CRC32
++-------------------------------+
+----
+
+.Header (60 bytes, little-endian)
+[cols="1,1,2",options="header"]
+|===
+| Offset | Size | Field
+
+| 0  | 8 | magic `SEALION1`
+| 8  | 4 | version `1` (readers reject anything else)
+| 12 | 4 | flags — bit 0: compressed postings, bit 1: compressed positions
+| 16 | 8 | doc_count
+| 24 | 8 | dict_count (fielded terms)
+| 32 | 8 | dict_offset
+| 40 | 8 | meta_offset
+| 48 | 8 | stats_offset
+| 56 | 4 | header_crc (CRC32 of bytes 0..56)
+|===
+
+Dictionary entries are sorted by `(field, term)` and carry
+`postings_offset/len`, `positions_offset/len`, `first_doc/last_doc`
+(block-skip inputs), and per-block CRCs.
+Statistics store per-field token totals in canonical field order;
+average length is `total / doc_count`.
+
+==== Dictionary entry fields
+
+[cols="1,2",options="header"]
+|===
+| Field | Notes
+
+| field id
+| `0`=title `1`=heading `2`=body `3`=anchor; unknown ids rejected
+
+| term bytes
+| `u32` length + UTF-8 bytes; entries sorted by `(field, term)`
+
+| doc_freq
+| documents containing this fielded term in this segment
+
+| offsets / lengths
+| absolute file positions of the postings and positions blocks
+
+| first_doc / last_doc
+| DocID bounds feeding future block-skip retrieval
+
+| CRCs
+| per-block checksums verified on every open
+|===
+
+=== Publication protocol
+
+. Write the segment to a temp file in the data directory.
+. Flush and fsync the temp file.
+. Re-read and verify the temp file (checksums, ordering, counts).
+. Atomically rename the temp file into place.
+. Publish the new generation with an atomic manifest rename.
+
+A crash before the final rename leaves the previous generation intact;
+orphan temp files are ignored on open.
+
+=== Integrity policy
+
+* Every header, postings block, dictionary entry, and file carries a CRC32.
+* Readers reject unknown versions and unknown flag bits loudly rather
+than guessing.
+* Truncation and single-bit corruption are errors, not degraded reads.
+* Document IDs in metadata must match the stored document's own ID.
+
+WARNING: Never hand-edit `manifest.json` or a `.seal` file.
+Use `sealion index stats`, `sealion index verify`, `sealion index merge`,
+and `sealion index delete` — the only writers that preserve the
+atomicity and checksum invariants above.

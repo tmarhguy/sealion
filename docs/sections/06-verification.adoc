@@ -1,0 +1,69 @@
+[#verification]
+== Verification
+
+How the project proves search is correct — and how to re-run
+that proof locally.
+
+=== Reference oracle
+
+An intentionally slow engine scans every document and computes the
+exact answer for any query shape. Every optimized path must agree
+with it:
+
+* Boolean identities and spec examples
+* prefix, fuzzy, and site evaluation
+* phrase position checks
+* ranked ordering (score desc, `DocId` asc)
+* incremental indexing equals clean rebuild
+* deleted documents never appear
+
+IMPORTANT: No search optimization lands without oracle agreement.
+Optimized top-k must equal exhaustive top-k unless the strategy is
+explicitly documented as approximate.
+
+=== Correctness properties
+
+[cols="2,2",options="header"]
+|===
+| Property | Where it is checked
+
+| `decode(encode(postings)) == postings`
+| codec unit + roundtrip tests
+
+| `merge(segments)` preserves search results
+| generations tests
+
+| incremental indexing `==` clean rebuild
+| reference agreement tests
+
+| optimized top-k `==` exhaustive top-k
+| phrase/rank + segment search tests
+
+| phrase results truly contain the phrase
+| phrase oracle tests
+
+| deleted docs never appear
+| Boolean reference + generations tests
+|===
+
+Corruption handling is also tested: bit flips, truncation, unknown
+versions, and unknown flag bits are rejected as errors — never
+misread (see <<implementation,Implementation>>).
+
+=== Running the gates
+
+[source,bash]
+----
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+----
+
+This is the same gate CI runs on every push
+(`.github/workflows/ci.yml`).
+Unit tests live next to the code in `src/` files; integration gates
+live in `tests/` (`boolean_reference`, `segment_roundtrip`,
+`generations`, `phrase_rank`, `segment_search`, and others).
+
+TIP: When adding a query feature, add the oracle comparison first.
+A failing oracle test is the specification; a passing one is the proof.

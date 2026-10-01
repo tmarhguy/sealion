@@ -1,0 +1,104 @@
+[#design]
+== Design
+
+Core data structures and transformations.
+This is the conceptual companion to the byte-level detail in
+<<implementation,Implementation>>.
+
+=== Document model
+
+Each document carries at least an identity, source location,
+fielded text, and metadata.
+Document IDs are stable content-derived values, so re-indexing
+the same path yields the same ID.
+
+[source,rust]
+----
+pub struct Document {
+    pub id: DocId,        // stable: fnv1a64(path)
+    pub url: String,      // source path or URL
+    pub title: String,
+    pub headings: Vec<String>,
+    pub body: String,
+    pub anchor_text: Vec<String>,
+}
+----
+
+Fields are first-class: `title`, `heading`, `body`, and `anchor`
+are indexed and weighted separately.
+
+=== Text analysis
+
+[source,text]
+----
+raw text
+  -> Unicode-alphanumeric tokenizer
+  -> case folding
+  -> stop-word handling (with position gaps)
+  -> Porter stemming (per-field configurable)
+  -> terms + positions
+----
+
+Stop words leave gaps rather than collapsing positions, so the phrase
+`"distributed systems"` never falsely matches across a removed word.
+Stemming is configurable per field through validated TOML configuration.
+
+WARNING: Query text must pass through the same analysis as indexed text.
+Skipping normalization on either side silently breaks term agreement
+and phrase checks. The parser in <<programming-model,Programming Model>>
+applies the index pipeline to every query term.
+
+=== Inverted index
+
+The primary structure maps each fielded term to a posting list of
+`(docID, frequency, positions)` entries:
+
+[source,text]
+----
+("body", "compiler")
+  doc 17: freq 2, positions [41, 98]
+  doc 93: freq 1, positions [7]
+----
+
+Properties:
+
+* postings are sorted by document ID
+* positions are gapped per document and stored in order
+* the in-memory index (`MemIndex`) and the on-disk segments expose
+the same `IndexView` trait, so search logic is storage-agnostic
+
+=== Term dictionary
+
+The vocabulary is a sorted, field-scoped dictionary — ordered by
+`(field, term)` — supporting exact lookup, prefix enumeration,
+and fuzzy candidate generation.
+
+[cols="1,3",options="header"]
+|===
+| Candidate | Why it fits here
+
+| sorted dictionary
+| simple, cache-friendly, sufficient at current scale
+
+| trie / FST-like structure
+| future option for prefix and fuzzy traversal at larger scale
+|===
+
+The choice is justified by lookup speed, prefix enumeration cost,
+memory, and build complexity — not by fashion.
+Any future change requires a benchmark comparison
+(see <<performance,Performance>>).
+
+=== Generations and merging
+
+Segments accumulate in generations ordered by `manifest.json`.
+Merging rebuilds the live document set into fewer segments:
+
+* newest version of an updated document wins (shadowing)
+* deleted documents are recorded as tombstones, invisible to search
+* `merge == clean rebuild` is a tested invariant
+* obsolete versions and tombstones are dropped by the merge
+
+TIP: Think of the mem-index as the write buffer, segments as
+immutable runs, and the manifest as the commit point.
+Readers only ever observe committed generations.

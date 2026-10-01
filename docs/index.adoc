@@ -1,0 +1,63 @@
+= SeaLion Technical Reference Manual
+:author: Tyrone Marhguy
+:doctype: book
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 3
+:icons: font
+:docinfo: shared
+:imagesdir: images
+:stem: latexmath
+:experimental:
+
+// Entry point for the static technical manual.
+// Add, remove, or reorder chapters by editing the include list below.
+// Each chapter lives in sections/ as NN-name.adoc with a level-1 (==) heading.
+
+[preface]
+== About this manual
+
+This is the detailed technical reference for the project.
+It is the companion to the concise, GitHub-facing `README.md`:
+
+* `README.md` — project identity, status, and quick start.
+* `docs/` (this manual) — architecture, interfaces, verification, and
+implementation detail in engineering-manual style.
+
+Conventions used throughout:
+
+* `monospace` marks commands, file paths, identifiers, and literals.
+* Section references such as `(§26)` point at the full requirements text
+where applicable to this project.
+* Unmeasured values are written as `TBD (unmeasured)` — never silently estimated.
+* Normative byte layouts and decision records live alongside this manual
+as Markdown (`docs/*.md`, `docs/adr/`) and are linked, not duplicated.
+
+TIP: Start with <<introduction,Introduction>> for scope and reading order,
+then <<architecture,Architecture>> for the system overview.
+
+// Chapters — reorder freely. Filenames carry a numeric prefix only so
+// directory listings stay in reading order; the visible numbers come
+// from :sectnums:, not from filenames.
+//
+// Blank lines between the includes are significant: they terminate any
+// open block (e.g. a trailing list) in the previous file so the next
+// chapter heading is always parsed as a new section.
+include::sections/01-introduction.adoc[]
+
+include::sections/02-architecture.adoc[]
+
+include::sections/03-design.adoc[]
+
+include::sections/04-interfaces.adoc[]
+
+include::sections/05-programming-model.adoc[]
+
+include::sections/06-verification.adoc[]
+
+include::sections/07-implementation.adoc[]
+
+include::sections/08-performance.adoc[]
+
+include::sections/09-limitations.adoc[]

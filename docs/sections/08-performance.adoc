@@ -1,0 +1,77 @@
+[#performance]
+== Performance
+
+Measured behaviour only. Unmeasured values are `TBD (unmeasured)`.
+Every optimization follows profile → hypothesize → implement →
+benchmark → document.
+
+=== Ranking model
+
+Primary lexical score is field-weighted BM25 with positive IDF:
+
+[latexmath]
+++++
+\text{idf}(t) = \ln\left(1 + \frac{N - df(t) + 0.5}{df(t) + 0.5}\right)
+++++
+
+[latexmath]
+++++
+\text{bm25}(t, d) = \text{idf}(t) \cdot
+\frac{tf(t,d)\,(k_1 + 1)}{tf(t,d) + k_1\left(1 - b + b\,\frac{|d|}{\text{avgdl}}\right)}
+++++
+
+with `k1 = 1.2`, `b = 0.75`, and per-field weights applied on top:
+
+[source,text]
+----
+score = 4.0 * title_BM25 + 2.0 * heading_BM25
+      + 1.0 * body_BM25  + 1.5 * anchor_BM25
+----
+
+`N`, `df`, and length statistics are computed over the live set only —
+tombstones and shadowed versions are excluded.
+Ties break by ascending `DocId`, giving a total order that skipping
+optimizers must reproduce exactly.
+
+=== Compression
+
+Postings use sorted DocIDs → delta encoding → variable-byte encoding;
+positions use deltas plus compact integer encoding. A raw (uncompressed)
+layout exists for benchmark comparison only.
+
+.Measured compression (demo segment, from ADRs)
+[cols="2,1,1",options="header"]
+|===
+| Metric | Compressed | Raw
+
+| bytes/posting
+| 1.0–1.6
+| `TBD (unmeasured)`
+
+| demo segment size
+| 46.8% of raw
+| 100% (baseline)
+|===
+
+Report bytes/posting, decode throughput, and query-latency effect
+together — size alone never justifies a codec change.
+
+=== Benchmarks
+
+[source,bash]
+----
+# Codec + segment sizes (compressed must beat raw)
+cargo test -p sealion-index --test compression_bench -- --nocapture
+
+# Query + indexing harnesses (roadmap: WAND ablation, scaling runs)
+cargo run -p sealion-bench -- --help
+----
+
+Benchmark sets should cover rare terms, common terms, multi-term AND,
+OR, phrases, typos, fuzzy, autocomplete, and a realistic mixed
+distribution. Scaling claims require 1/2/4/8-shard runs —
+never claim linear scaling without measuring it.
+
+NOTE: kgCO₂ or latency numbers copied from another project do not
+belong here. If it was not measured in this tree, it is
+`TBD (unmeasured)`.
