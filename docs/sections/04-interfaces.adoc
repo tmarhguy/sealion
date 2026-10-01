@@ -53,12 +53,22 @@ sealion index merge         --data-dir ./sealion-data
 | consolidate live documents, dropping tombstones and shadowed versions
 |===
 
-Unimplemented surface stays honest:
+The rest of the working surface:
 
 [source,bash]
 ----
-sealion crawl https://example.org
-# sealion: `crawl` is not yet implemented (milestone 11).
+# Typo tolerance + autocomplete
+sealion search "distribted databse" --data-dir ./sealion-data
+sealion complete comp --data-dir ./sealion-data
+
+# Crawl the web (robots, delays, dedup) straight into the index
+sealion crawl https://example.org --depth 2 --pages 100 --data-dir ./sealion-data
+
+# Cluster, relevance gate, benchmarks, serve
+sealion cluster init --shards 4 --replicas 2 --data-dir ./cluster-data
+sealion eval relevance --save new.json --baseline old.json
+sealion bench query --rounds 3 --cache --data-dir ./sealion-data
+sealion serve --bind 127.0.0.1:8080 --data-dir ./sealion-data
 ----
 
 === Data directory
