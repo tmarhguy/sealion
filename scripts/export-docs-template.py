@@ -11,12 +11,19 @@ for path in (ROOT/'docs/theme').iterdir():
     if path.is_file() and path.suffix in ('.css','.js','.html','.adoc','.md','.json'):
         if path.name not in ('config.js','config.example.js'):
             files[str(path.relative_to(ROOT))]=path.read_bytes()
+scaffold=ROOT/'docs/theme/scaffold'
+for path in scaffold.iterdir():
+    if path.is_file():
+        files[str(path.relative_to(ROOT))]=path.read_bytes()
 for path in (ROOT/'scripts').glob('*docs*.py'):
     files[str(path.relative_to(ROOT))]=path.read_bytes()
-for name in ['scripts/build-docs.sh','Makefile','.github/workflows/docs.yml']:
-    files[name]=(ROOT/name).read_bytes()
+files['scripts/ingest-logs.py']=(ROOT/'scripts/ingest-logs.py').read_bytes()
+files['scripts/build-docs.sh']=files['docs/theme/scaffold/build-docs.sh']
+files['Makefile']=files['docs/theme/scaffold/Makefile']
+files['.github/workflows/docs.yml']=files['docs/theme/scaffold/docs.yml']
 files['docs/index.adoc']=(ROOT/'docs/theme/starter.adoc').read_bytes()
 files['docs/site.json']=(ROOT/'docs/theme/site.example.json').read_bytes()
+files['docs/404.html']=(ROOT/'docs/404.html').read_bytes()
 files['LICENSE']=(ROOT/'docs/theme/LICENSE').read_bytes()
 files['docs/theme/LICENSE']=files['LICENSE']
 files['.gitignore']=b'/build/\n.DS_Store\n__pycache__/\n'

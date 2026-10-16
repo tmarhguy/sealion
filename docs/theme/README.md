@@ -55,12 +55,11 @@ from split HTML pages; this design deliberately keeps the current single-file bu
 
 ## Author page
 
-`about.adoc` contains Tyrone's reusable biography and project links, based on
-[his website](https://www.tmarhguy.com/). The starter includes it automatically.
-Update the text when reusing the template for a different author. Keep an explicit
-`[#about]` anchor, and set `"about": "#about"` in `docs/site.json`. This adds a persistent
-About me link in the header, including on phones. The page also appears in the
-chapter sidebar. Update its group index if you add or remove chapters.
+The exported starter ships a placeholder biography. Replace it with the author's
+name and project links. Keep an explicit `[#about]` anchor, and set `"about": "#about"`
+in `docs/site.json`. This adds a persistent About me link in the header, including
+on phones. The page also appears in the chapter sidebar. Update its group index
+if you add or remove chapters.
 
 ## Diagrams and documentation figures
 
@@ -232,3 +231,35 @@ resolves the actual repository automatically. `website` is independent: omit it
 or set it to an empty string when there is no separate application/site. The
 GitHub button is likewise omitted when no repository is known. Source links
 default to the repository's `main` branch; configure `branch` for another branch.
+
+## Project accent
+
+Leave `accent` and `accentDark` empty for the monochrome notebook. Set both to
+`#rrggbb` when a project needs a color: `accent` is used on the light theme and
+`accentDark` on the dark theme. They color links, the active chapter, and the
+reading-progress bar. Paper, ink, and type stay the same.
+
+## Engineering log
+
+Set `logs` to a directory of markdown notes inside the repository, for example
+`"logs": "log"` or `"logs": "docs/log"`. The build converts every note except
+`README.md` into a subsection of one Engineering log chapter. Add this include
+before the about page:
+
+```adoc
+ifdef::has-logs[]
+include::sections/generated/engineering-log.adoc[]
+
+endif::[]
+```
+
+The sidebar shows that chapter with an arrow. `nested` may list chapter ids
+that should expand the same way; `engineering-log` is the default. `searchHint`
+replaces the empty-search sentence when it is non-empty.
+
+## Measured charts
+
+Put recorded series in `docs/charts/<name>.json` (`title`, `subtitle`, `ylabel`,
+`categories`, and `series` of `{name, values}`). `scripts/render-docs-charts.py`
+draws them with matplotlib and recolors the SVG so it follows the accent in
+both themes. Do not invent values. Embed the result with `image::`.

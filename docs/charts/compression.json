@@ -1,0 +1,18 @@
+{
+  "title": "Demo segment size",
+  "subtitle": "Compressed postings versus the raw baseline, from the performance chapter",
+  "ylabel": "percent of raw",
+  "categories": [
+    "Compressed",
+    "Raw"
+  ],
+  "series": [
+    {
+      "name": "Size",
+      "values": [
+        46.8,
+        100
+      ]
+    }
+  ]
+}

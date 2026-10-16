@@ -21,9 +21,9 @@
 
 [#overview]
 [preface]
-== SeaLion documentation
+== A search engine written in Rust
 
-SeaLion is a distributed full-text search engine written in Rust. This manual describes its architecture, command-line interfaces, query model, storage format, and verification strategy.
+SeaLion is a search engine. It indexes a set of documents, ranks the matches, and answers from the command line or from a page in the browser. It is written in Rust. It can run as one process, or split the index across machines.
 
 ++++
 <!-- docs-hero -->
@@ -98,4 +98,3 @@ include::sections/09-limitations.adoc[]
 
 include::sections/10-about.adoc[]
 
-include::sections/11-template.adoc[]

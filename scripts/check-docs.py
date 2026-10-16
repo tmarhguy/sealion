@@ -36,6 +36,13 @@ root = Path(sys.argv[1] if len(sys.argv)>1 else 'build/docs').resolve()
 text = (root/'index.html').read_text()
 page = Page(text)
 errors = []
+not_found = root/'404.html'
+if not not_found.is_file():
+    errors.append('Missing custom 404 page')
+else:
+    missing_text = not_found.read_text()
+    if '<meta name="robots" content="noindex">' not in missing_text or 'id="home"' not in missing_text:
+        errors.append('404 page needs noindex and a home link')
 ids = set(page.ids)
 for key, count in Counter(page.ids).items():
     if count > 1:

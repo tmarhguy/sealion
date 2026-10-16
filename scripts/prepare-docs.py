@@ -16,6 +16,18 @@ _config = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_config)
 SITE = _config.resolve_site(json.loads((ROOT/'docs/site.json').read_text()))
 
+HEX = re.compile(r'^#[0-9a-fA-F]{6}$')
+
+def accent_css(site):
+    """Optional project accent. Empty values keep the monochrome notebook."""
+    accent = (site.get('accent') or '').strip()
+    dark = (site.get('accentDark') or '').strip() or accent
+    if not accent:
+        return ''
+    if not HEX.fullmatch(accent) or not HEX.fullmatch(dark):
+        raise SystemExit('docs/site.json accent and accentDark must be #rrggbb')
+    return f'<style>:root{{--accent:{accent}}} :root[data-theme=dark]{{--accent:{dark}}}</style>\n'
+
 def head():
     url = os.environ.get('DOCS_SITE_URL') or SITE.get('url','')
     if url and (urlsplit(url).scheme != 'https' or not urlsplit(url).netloc):
@@ -48,7 +60,7 @@ def head():
     # Set the initial theme before first paint, including on direct chapter links.
     initial = """<script>try{document.documentElement.dataset.theme=localStorage.getItem('notebook-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script>"""
     (OUT/'theme').mkdir(parents=True,exist_ok=True)
-    (OUT/'theme/docinfo.html').write_text(initial+'\n'+(ROOT/'docs/theme/docinfo.html').read_text()+'\n'+'\n'.join(tags)+'\n')
+    (OUT/'theme/docinfo.html').write_text(initial+'\n'+(ROOT/'docs/theme/docinfo.html').read_text()+'\n'+accent_css(SITE)+'\n'.join(tags)+'\n')
     (OUT/'theme/config.js').write_text('window.NOTEBOOK = '+json.dumps(SITE,ensure_ascii=True)+';\n')
 
 TOKEN = re.compile(r'(?P<comment>//[^\n]*|/\*[\s\S]*?\*/|\#[^\n]*)|(?P<string>"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\')|(?P<keyword>\b(?:pub|struct|fn|let|mut|impl|use|enum|return|if|else|for|in|while|match|const|true|false|null|None|Some)\b)|(?P<number>\b\d+(?:\.\d+)?\b)')
@@ -129,12 +141,34 @@ def page():
         svg = svg.replace('aria-labelledby="title desc"',f'aria-labelledby="{prefix}-title {prefix}-desc"')
         return svg
     text = re.sub(r'<img\s+src="images/([\w-]+)\.svg"[^>]*>',diagram,text)
+    image_count = 0
+    def defer_image(match):
+        nonlocal image_count
+        image_count += 1
+        tag = match.group(0)
+        if 'decoding=' not in tag:
+            tag = tag.replace('<img', '<img decoding="async"', 1)
+        if image_count > 1 and 'loading=' not in tag:
+            tag = tag.replace('<img', '<img loading="lazy"', 1)
+        return tag
+    text = re.sub(r'<img\b[^>]*>',defer_image,text)
     text = re.sub(r'(<code\b[^>]*data-lang="([\w-]+)"[^>]*>)(.*?)</code>',code,text,flags=re.S)
     file.write_text(text)
     (OUT/'.nojekyll').touch()
 
+def not_found():
+    source = (ROOT/'docs/404.html').read_text()
+    url = os.environ.get('DOCS_SITE_URL') or SITE.get('url','')
+    site_root = urlsplit(url).path or '/'
+    if not site_root.endswith('/'):
+        site_root += '/'
+    name = SITE.get('name') or 'Project'
+    source = source.replace('__SITE_NAME__', html.escape(name))
+    source = source.replace('__SITE_ROOT__', html.escape(site_root, quote=True))
+    (OUT/'404.html').write_text(source)
+
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('stage',choices=['head','page'])
+    parser.add_argument('stage',choices=['head','page','not-found'])
     args=parser.parse_args()
-    head() if args.stage=='head' else page()
+    {'head':head,'page':page,'not-found':not_found}[args.stage]()

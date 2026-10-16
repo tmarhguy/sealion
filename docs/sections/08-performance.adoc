@@ -56,6 +56,9 @@ layout exists for benchmark comparison only.
 | 100% (baseline)
 |===
 
+.Recorded demo-segment size
+image::compression.svg[Compressed demo segment at 46.8 percent of the raw baseline,width=800]
+
 Report bytes/posting, decode throughput, and query-latency effect
 together — size alone never justifies a codec change.
 

@@ -14,5 +14,10 @@
     "3": "Author"
   },
   "branch": "main",
-  "hero": null
+  "hero": null,
+  "accent": "",
+  "accentDark": "",
+  "nested": ["engineering-log"],
+  "logs": "",
+  "searchHint": ""
 }

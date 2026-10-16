@@ -1,8 +1,8 @@
 {
   "name": "SeaLion",
   "label": "Documentation",
-  "title": "SeaLion documentation",
-  "description": "Architecture, interfaces, storage format, verification, and performance of the SeaLion search engine.",
+  "title": "A search engine written in Rust",
+  "description": "A search engine written in Rust. It indexes documents, ranks matches, and answers from the command line or a browser.",
   "url": "",
   "image": "images/social-card.png",
   "about": "#about",
@@ -19,18 +19,21 @@
     "implementation": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/07-implementation.adoc",
     "performance": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/08-performance.adoc",
     "limitations": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/09-limitations.adoc",
-    "about": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/10-about.adoc",
-    "template": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/11-template.adoc"
+    "about": "https://github.com/tmarhguy/sealion/blob/main/docs/sections/10-about.adoc"
   },
   "groups": {
     "0": "Documentation",
     "2": "Reference",
     "6": "Validation",
-    "10": "Author",
-    "11": "Template"
+    "10": "Author"
   },
   "hero": {
     "image": "images/sealion-demo.gif",
-    "alt": "SeaLion demo — search page with BM25-ranked hits (2x speed)."
-  }
+    "alt": "SeaLion demo \u2014 search page with BM25-ranked hits (2x speed)."
+  },
+  "accent": "#0f766e",
+  "accentDark": "#5eead4",
+  "nested": [
+    "engineering-log"
+  ]
 }
